@@ -1,0 +1,19 @@
+<h2>Results for Quiz {{ quiz_id }}</h2>
+<a href="/download_report/{{ quiz_id }}">Download CSV Report</a>
+<table border="1">
+    <tr>
+        <th>Name</th>
+        <th>Score</th>
+        <th>Total</th>
+        <th>Time</th>
+    </tr>
+
+    {% for r in results %}
+    <tr>
+        <td>{{ r[0] }}</td>
+        <td>{{ r[1] }}</td>
+        <td>{{ r[2] }}</td>
+        <td>{{ r[3] }}</td>
+    </tr>
+    {% endfor %}
+</table>

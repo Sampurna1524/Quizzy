@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz</title>
+</head>
+<body>
+
+<h2>Quiz</h2>
+
+<form method="POST" action="/submit/{{ quiz_id }}">
+
+    <label>
+        Name: <input type="text" name="name" required>
+    </label>
+
+    <br><br>
+
+    {% for q in questions %}
+        {% set q_index = loop.index %}
+
+        <p><b>{{ q_index }}. {{ q.question }}</b></p>
+
+        {% for key, val in q.options.items() %}
+            <label>
+                <input 
+                    type="radio" 
+                    name="q{{ q_index }}" 
+                    value="{{ key }}"
+                >
+                {{ key }}) {{ val }}
+            </label>
+            <br>
+        {% endfor %}
+
+        <br>
+    {% endfor %}
+
+    <button type="submit">Submit</button>
+
+</form>
+
+</body>
+</html>

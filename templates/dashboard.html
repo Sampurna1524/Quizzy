@@ -1,0 +1,17 @@
+<h2>Your Quizzes</h2>
+
+<a href="/create_quiz">Create New Quiz</a>
+<br><br>
+
+{% if quizzes %}
+    {% for quiz_id in quizzes %}
+        <p>
+            <b>Quiz ID:</b> {{ quiz_id }} <br>
+            <a href="/quiz/{{ quiz_id }}">Take Link</a> |
+            <a href="/edit_quiz/{{ quiz_id }}">Edit</a>
+            <a href="/results/{{ quiz_id }}">View Results</a>
+        </p>
+    {% endfor %}
+{% else %}
+    <p>No quizzes yet. Create one!</p>
+{% endif %}

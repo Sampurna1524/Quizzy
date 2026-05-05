@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Result</title>
+</head>
+<body>
+
+<h2>Result for {{ name if name else "Anonymous" }}</h2>
+<h3>Score: {{ score }}/{{ results|length }}</h3>
+<form method="POST" action="/download_result/{{ quiz_id }}">
+    <input type="hidden" name="name" value="{{ name }}">
+    
+    {% for r in results %}
+        <input type="hidden" name="q{{ loop.index }}" value="{{ r.your }}">
+    {% endfor %}
+
+    <button type="submit">Download PDF Report</button>
+</form>
+
+<hr>
+
+{% for r in results %}
+    <p><b>{{ loop.index }}. {{ r.question }}</b></p>
+
+    {% if r.your == "Not Answered" %}
+        <p style="color: orange;"><b>⚠ Not Answered</b></p>
+    {% endif %}
+
+    {% for key, val in r.options.items() %}
+        {% if key == r.correct %}
+            <span style="color: green;">✔ {{ key }}) {{ val }}</span><br>
+        {% elif key == r.your %}
+            <span style="color: red;">❌ {{ key }}) {{ val }}</span><br>
+        {% else %}
+            {{ key }}) {{ val }}<br>
+        {% endif %}
+    {% endfor %}
+
+    <br>
+{% endfor %}
+
+</body>
+</html>
