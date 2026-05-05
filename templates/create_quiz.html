@@ -7,34 +7,67 @@
         body {
             margin: 0;
             font-family: "Segoe UI", Tahoma, sans-serif;
-            background: linear-gradient(135deg, #4facfe, #00f2fe);
-            height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
+        /* FLOATING BACKGROUND CIRCLES */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            animation: float 10s infinite ease-in-out;
+        }
+
+        .c1 { width: 120px; height: 120px; top: 10%; left: 10%; }
+        .c2 { width: 80px; height: 80px; bottom: 15%; right: 10%; }
+        .c3 { width: 150px; height: 150px; top: 60%; left: 70%; }
+
+        /* MAIN CARD */
         .card {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 35px 40px;
+            border-radius: 18px;
             width: 420px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-            text-align: center;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
             animation: fadeIn 0.6s ease;
+            text-align: center;
+            position: relative;
+            z-index: 2;
         }
 
         h2 {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: #333;
         }
 
-        .file-input {
+        .subtitle {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 20px;
+        }
+
+        /* FILE INPUT */
+        .file-box {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 15px;
             margin: 15px 0;
+            transition: 0.3s;
             text-align: left;
         }
 
-        .file-input label {
+        .file-box:hover {
+            border-color: #667eea;
+            background: rgba(102,126,234,0.05);
+        }
+
+        .file-box label {
             font-weight: bold;
             display: block;
             margin-bottom: 5px;
@@ -43,23 +76,24 @@
 
         input[type="file"] {
             width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            transition: 0.3s;
+            border: none;
+            background: transparent;
         }
 
-        input[type="file"]:hover {
-            border-color: #4facfe;
+        .hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
 
+        /* BUTTON */
         button {
             margin-top: 20px;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #4facfe, #00c6ff);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
             font-size: 16px;
             cursor: pointer;
@@ -68,19 +102,14 @@
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
 
         button:active {
             transform: scale(0.98);
         }
 
-        .hint {
-            font-size: 13px;
-            color: #777;
-            margin-top: 5px;
-        }
-
+        /* ANIMATIONS */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -91,30 +120,44 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
     </style>
 </head>
 
 <body>
 
+<!-- Background circles -->
+<div class="circle c1"></div>
+<div class="circle c2"></div>
+<div class="circle c3"></div>
+
+<!-- Card -->
 <div class="card">
 
     <h2>📝 Create New Quiz</h2>
+    <div class="subtitle">Upload your questions and answer key to generate a quiz instantly</div>
 
     <form method="POST" enctype="multipart/form-data">
 
-        <div class="file-input">
-            <label>Upload Questions</label>
+        <div class="file-box">
+            <label>📄 Questions File</label>
             <input type="file" name="questions_file" required>
-            <div class="hint">Upload MCQ file (.txt format)</div>
+            <div class="hint">Supports .txt format (MCQs)</div>
         </div>
 
-        <div class="file-input">
-            <label>Upload Answer Key</label>
+        <div class="file-box">
+            <label>✅ Answer Key (Optional)</label>
             <input type="file" name="answers_file">
-            <div class="hint">Optional — enables auto grading</div>
+            <div class="hint">Enable auto evaluation</div>
         </div>
 
-        <button type="submit">🚀 Create Quiz</button>
+        <button type="submit">🚀 Generate Quiz</button>
 
     </form>
 

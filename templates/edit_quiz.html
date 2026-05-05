@@ -7,40 +7,78 @@
         body {
             margin: 0;
             font-family: "Segoe UI", Tahoma, sans-serif;
-            background: linear-gradient(135deg, #ff9a9e, #fad0c4);
-            height: 100vh;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
 
+        /* FLOATING BACKGROUND */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+            animation: float 10s infinite ease-in-out;
+        }
+
+        .c1 { width: 120px; height: 120px; top: 10%; left: 15%; }
+        .c2 { width: 80px; height: 80px; bottom: 15%; right: 10%; }
+        .c3 { width: 150px; height: 150px; top: 60%; left: 70%; }
+
+        /* CARD */
         .card {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 35px 40px;
+            border-radius: 18px;
             width: 420px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.25);
             text-align: center;
             animation: fadeIn 0.6s ease;
+            position: relative;
+            z-index: 2;
         }
 
         h2 {
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             color: #333;
         }
 
-        .warning {
-            font-size: 13px;
-            color: #d84315;
+        .subtitle {
+            font-size: 14px;
+            color: #777;
             margin-bottom: 15px;
         }
 
-        .file-input {
+        /* WARNING BOX */
+        .warning {
+            background: rgba(255, 87, 34, 0.1);
+            border: 1px solid rgba(255, 87, 34, 0.3);
+            color: #d84315;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+
+        /* FILE BOX */
+        .file-box {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 15px;
             margin: 15px 0;
+            transition: 0.3s;
             text-align: left;
         }
 
-        .file-input label {
+        .file-box:hover {
+            border-color: #ff7e5f;
+            background: rgba(255,126,95,0.05);
+        }
+
+        .file-box label {
             font-weight: bold;
             display: block;
             margin-bottom: 5px;
@@ -49,23 +87,24 @@
 
         input[type="file"] {
             width: 100%;
-            padding: 8px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            transition: 0.3s;
+            border: none;
+            background: transparent;
         }
 
-        input[type="file"]:hover {
-            border-color: #ff6f61;
+        .hint {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
         }
 
+        /* BUTTON */
         button {
             margin-top: 20px;
             width: 100%;
-            padding: 12px;
+            padding: 14px;
             border: none;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #ff6f61, #ff9472);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
             color: white;
             font-size: 16px;
             cursor: pointer;
@@ -74,31 +113,27 @@
 
         button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
 
         button:active {
             transform: scale(0.98);
         }
 
-        .hint {
-            font-size: 13px;
-            color: #777;
-            margin-top: 5px;
-        }
-
+        /* BACK LINK */
         .back {
-            display: block;
+            display: inline-block;
             margin-top: 15px;
-            text-decoration: none;
             font-size: 13px;
-            color: #555;
+            color: #666;
+            text-decoration: none;
         }
 
         .back:hover {
             text-decoration: underline;
         }
 
+        /* ANIMATIONS */
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -109,34 +144,48 @@
                 transform: translateY(0);
             }
         }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+
     </style>
 </head>
 
 <body>
 
+<!-- Background -->
+<div class="circle c1"></div>
+<div class="circle c2"></div>
+<div class="circle c3"></div>
+
+<!-- Card -->
 <div class="card">
 
     <h2>✏️ Edit Quiz</h2>
+    <div class="subtitle">Update your quiz by uploading new files</div>
 
     <div class="warning">
-        ⚠ Uploading new files will overwrite the existing quiz
+        ⚠ This will overwrite the existing quiz content
     </div>
 
     <form method="POST" enctype="multipart/form-data">
 
-        <div class="file-input">
-            <label>Replace Questions</label>
+        <div class="file-box">
+            <label>📄 Replace Questions</label>
             <input type="file" name="questions_file">
-            <div class="hint">Upload a new MCQ file (.txt)</div>
+            <div class="hint">Upload new MCQ file (.txt)</div>
         </div>
 
-        <div class="file-input">
-            <label>Replace Answers</label>
+        <div class="file-box">
+            <label>✅ Replace Answers</label>
             <input type="file" name="answers_file">
-            <div class="hint">Optional — only if answer key changes</div>
+            <div class="hint">Only if answer key changed</div>
         </div>
 
-        <button type="submit">💾 Update Quiz</button>
+        <button type="submit">💾 Save Changes</button>
 
     </form>
 
