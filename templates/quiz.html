@@ -4,6 +4,10 @@
     <title>Quiz</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
             font-family: "Segoe UI", Tahoma, sans-serif;
@@ -37,9 +41,10 @@
 
         .name-box input {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid #ccc;
+            box-sizing: border-box; /* fallback safety */
         }
 
         /* QUESTION CARD */

@@ -128,6 +128,11 @@
             color: #777;
         }
 
+        .copy {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
     </style>
 </head>
 
@@ -160,6 +165,7 @@
                         <a href="/quiz/{{ quiz_id }}" class="take">Take</a>
                         <a href="/edit_quiz/{{ quiz_id }}" class="edit">Edit</a>
                         <a href="/results/{{ quiz_id }}" class="results">Results</a>
+                        <a href="#" class="copy" onclick="copyLink('{{ quiz_id }}', this)">Copy Link</a>
                     </div>
 
                 </div>
@@ -173,6 +179,25 @@
     {% endif %}
 
 </div>
+
+<script>
+function copyLink(quizId, btn) {
+    const link = window.location.origin + "/quiz/" + quizId;
+
+    navigator.clipboard.writeText(link).then(() => {
+        const originalText = btn.innerText;
+        btn.innerText = "Copied!";
+        btn.style.background = "#c8e6c9";
+        btn.style.color = "#2e7d32";
+
+        setTimeout(() => {
+            btn.innerText = originalText;
+            btn.style.background = "#e3f2fd";
+            btn.style.color = "#1565c0";
+        }, 1500);
+    });
+}
+</script>
 
 </body>
 </html>
