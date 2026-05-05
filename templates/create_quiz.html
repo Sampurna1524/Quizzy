@@ -1,7 +1,124 @@
-<h2>Create Quiz</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Quiz</title>
 
-<form method="POST" enctype="multipart/form-data">
-    Questions: <input type="file" name="questions_file"><br>
-    Answers: <input type="file" name="answers_file"><br>
-    <button type="submit">Create</button>
-</form>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            width: 420px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .file-input {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .file-input label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            transition: 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #4facfe;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4facfe, #00c6ff);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <h2>📝 Create New Quiz</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+
+        <div class="file-input">
+            <label>Upload Questions</label>
+            <input type="file" name="questions_file" required>
+            <div class="hint">Upload MCQ file (.txt format)</div>
+        </div>
+
+        <div class="file-input">
+            <label>Upload Answer Key</label>
+            <input type="file" name="answers_file">
+            <div class="hint">Optional — enables auto grading</div>
+        </div>
+
+        <button type="submit">🚀 Create Quiz</button>
+
+    </form>
+
+</div>
+
+</body>
+</html>

@@ -1,24 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin Upload</title>
+    <title>Upload Quiz</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .file-input {
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .file-input label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+            color: #444;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            transition: 0.3s;
+        }
+
+        input[type="file"]:hover {
+            border-color: #667eea;
+        }
+
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .hint {
+            font-size: 13px;
+            color: #777;
+            margin-top: 5px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    </style>
 </head>
+
 <body>
 
-<h2>Upload Quiz</h2>
+<div class="card">
 
-<form method="POST" enctype="multipart/form-data">
-    
-    <p>Upload Questions File:</p>
-    <input type="file" name="questions_file" required>
+    <h2>📄 Upload Quiz</h2>
 
-    <p>Upload Answer Key File:</p>
-    <input type="file" name="answers_file">
+    <form method="POST" enctype="multipart/form-data">
 
-    <br><br>
-    <button type="submit">Upload</button>
+        <div class="file-input">
+            <label>Questions File</label>
+            <input type="file" name="questions_file" required>
+            <div class="hint">Upload .txt with MCQs</div>
+        </div>
 
-</form>
+        <div class="file-input">
+            <label>Answer Key</label>
+            <input type="file" name="answers_file">
+            <div class="hint">Optional (auto-check enabled)</div>
+        </div>
+
+        <button type="submit">🚀 Upload & Generate Quiz</button>
+
+    </form>
+
+</div>
 
 </body>
 </html>

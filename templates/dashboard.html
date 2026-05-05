@@ -1,17 +1,178 @@
-<h2>Your Quizzes</h2>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
 
-<a href="/create_quiz">Create New Quiz</a>
-<br><br>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #f4f6fb;
+        }
 
-{% if quizzes %}
-    {% for quiz_id in quizzes %}
-        <p>
-            <b>Quiz ID:</b> {{ quiz_id }} <br>
-            <a href="/quiz/{{ quiz_id }}">Take Link</a> |
-            <a href="/edit_quiz/{{ quiz_id }}">Edit</a>
-            <a href="/results/{{ quiz_id }}">View Results</a>
-        </p>
-    {% endfor %}
-{% else %}
-    <p>No quizzes yet. Create one!</p>
-{% endif %}
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+        }
+
+        .logout {
+            background: white;
+            color: #764ba2;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .logout:hover {
+            background: #eee;
+        }
+
+        /* MAIN */
+        .container {
+            padding: 40px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .create-btn {
+            background: linear-gradient(135deg, #4facfe, #00c6ff);
+            color: white;
+            padding: 12px 18px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .create-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        /* GRID */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* CARD */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+        }
+
+        .quiz-id {
+            font-size: 14px;
+            color: #777;
+            margin-bottom: 10px;
+        }
+
+        .actions a {
+            display: inline-block;
+            margin-right: 8px;
+            margin-top: 10px;
+            padding: 6px 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .take {
+            background: #e0f7fa;
+            color: #00796b;
+        }
+
+        .edit {
+            background: #fff3e0;
+            color: #ef6c00;
+        }
+
+        .results {
+            background: #ede7f6;
+            color: #5e35b1;
+        }
+
+        .actions a:hover {
+            opacity: 0.8;
+        }
+
+        .empty {
+            text-align: center;
+            margin-top: 80px;
+            color: #777;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>📊 Your Dashboard</h2>
+    <a href="/logout" class="logout">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <div class="top-bar">
+        <h3>Your Quizzes</h3>
+        <a href="/create_quiz" class="create-btn">+ Create Quiz</a>
+    </div>
+
+    {% if quizzes %}
+        <div class="grid">
+            {% for quiz_id in quizzes %}
+                <div class="card">
+
+                    <div class="quiz-id">
+                        Quiz ID: <b>{{ quiz_id }}</b>
+                    </div>
+
+                    <div class="actions">
+                        <a href="/quiz/{{ quiz_id }}" class="take">Take</a>
+                        <a href="/edit_quiz/{{ quiz_id }}" class="edit">Edit</a>
+                        <a href="/results/{{ quiz_id }}" class="results">Results</a>
+                    </div>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <h3>No quizzes yet 😢</h3>
+            <p>Create your first quiz to get started!</p>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

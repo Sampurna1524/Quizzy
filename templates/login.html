@@ -1,7 +1,225 @@
-<h2>Login</h2>
-<form method="POST">
-    Username: <input name="username"><br>
-    Password: <input name="password" type="password"><br>
-    <button type="submit">Login</button>
-</form>
-<a href="/signup">Signup</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Quizzy</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            overflow: hidden;
+        }
+
+        /* LEFT SIDE */
+        .left {
+            flex: 1;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .features {
+            margin-top: 20px;
+        }
+
+        .feature {
+            margin: 10px 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* Floating quiz dots */
+        .dot {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.2;
+        }
+
+        .dot1 { width: 80px; height: 80px; background: white; top: 10%; left: 20%; }
+        .dot2 { width: 50px; height: 50px; background: white; bottom: 15%; left: 30%; }
+        .dot3 { width: 100px; height: 100px; background: white; top: 50%; left: 70%; }
+
+        /* RIGHT SIDE */
+        .right {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 18px;
+            width: 360px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+            animation: fadeIn 0.6s ease;
+        }
+
+        .card h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        /* Progress bar style */
+        .progress {
+            height: 6px;
+            background: #eee;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .input-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            font-size: 13px;
+            color: #555;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: #667eea;
+            outline: none;
+            box-shadow: 0 0 6px rgba(102,126,234,0.5);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .signup {
+            text-align: center;
+            margin-top: 18px;
+            font-size: 14px;
+        }
+
+        .signup a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .signup a:hover {
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- LEFT -->
+<div class="left">
+    <div class="logo">🎯 Quizzy</div>
+    <div class="tagline">
+        Smarter quizzes. Faster results. Better learning.
+    </div>
+
+    <div class="features">
+        <div class="feature">✔ Create quizzes in seconds</div>
+        <div class="feature">✔ Instant auto-evaluation</div>
+        <div class="feature">✔ Track student performance</div>
+        <div class="feature">✔ Download detailed reports</div>
+    </div>
+
+    <!-- floating elements -->
+    <div class="dot dot1"></div>
+    <div class="dot dot2"></div>
+    <div class="dot dot3"></div>
+</div>
+
+<!-- RIGHT -->
+<div class="right">
+    <div class="card">
+
+        <div class="progress">
+            <div class="progress-bar"></div>
+        </div>
+
+        <h2>🔐 Login to Quizzy</h2>
+
+        <form method="POST">
+
+            <div class="input-group">
+                <label>Username</label>
+                <input name="username" required>
+            </div>
+
+            <div class="input-group">
+                <label>Password</label>
+                <input name="password" type="password" required>
+            </div>
+
+            <button type="submit">🚀 Start Quiz Journey</button>
+
+        </form>
+
+        <div class="signup">
+            New here? <a href="/signup">Create account</a>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>

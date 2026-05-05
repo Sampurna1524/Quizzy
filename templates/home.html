@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quizzy</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #f5f7fb;
+            color: #333;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 26px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .nav a {
+            margin-left: 20px;
+            text-decoration: none;
+            color: #444;
+            font-weight: 500;
+        }
+
+        .nav a:hover {
+            color: #667eea;
+        }
+
+        /* HERO */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 140px 20px;
+            text-align: center;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2), transparent);
+            top: -100px;
+            left: -100px;
+            filter: blur(100px);
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            margin-bottom: 15px;
+        }
+
+        .hero p {
+            font-size: 18px;
+            max-width: 700px;
+            margin: auto;
+            opacity: 0.9;
+        }
+
+        .buttons {
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 22px;
+            margin: 10px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-secondary {
+            border: 2px solid white;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+        }
+
+        /* FLOATING CIRCLES */
+        .circle {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.1);
+    backdrop-filter: blur(5px);
+    animation: floatSlow 10s ease-in-out infinite;
+    z-index: 1;   /* ✅ ADD THIS */
+}
+
+        .circle1 { width: 120px; height: 120px; top: 20%; left: 10%; }
+        .circle2 { width: 80px; height: 80px; bottom: 15%; right: 15%; }
+        .circle3 { width: 150px; height: 150px; top: 50%; right: 25%; }
+
+        /* FLOATING CARDS */
+        .floating-card {
+    position: absolute;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    animation: float 6s ease-in-out infinite;
+    box-shadow: 0 0 20px rgba(255,255,255,0.3);
+    z-index: 3;   /* ✅ ADD THIS */
+}
+
+        .card1 { top: 20%; left: 10%; }
+        .card2 { top: 60%; left: 20%; }
+        .card3 { top: 30%; right: 15%; }
+
+        /* DASHBOARD */
+        .dashboard-preview {
+    position: absolute;
+    bottom: 20%;
+    right: 10%;
+    background: rgba(255,255,255,0.2);
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+    animation: floatSlow 8s ease-in-out infinite;
+    box-shadow: 0 0 25px rgba(255,255,255,0.35);
+    z-index: 3;   /* ✅ ADD THIS */
+}
+
+        /* ANIMATIONS */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes floatSlow {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-25px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* SECTION */
+        .section {
+            padding: 30px 30px;
+            text-align: center;
+        }
+
+        .section h2 {
+            margin-bottom: 15px;
+        }
+
+        .stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 25px;
+    flex-wrap: wrap;
+}
+
+        .stat h3 {
+            font-size: 30px;
+            color: #667eea;
+        }
+
+        /* GRID */
+        .grid {
+            margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+        }
+
+        /* FOOTER */
+        /* FOOTER */
+.footer {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+/* CONTENT */
+.footer-content {
+    max-width: 600px;
+    margin: auto;
+}
+
+/* MESSAGE */
+.footer-message {
+    font-size: 16px;
+    margin-bottom: 10px;
+    opacity: 0.9;
+}
+
+/* COPYRIGHT */
+.footer-copy {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+        .card img, .step img {
+            width: 50px;
+            margin-bottom: 10px;
+        }
+
+        .card h3, .step h3 {
+            margin: 10px 0 5px;
+        }
+
+        .card p, .step p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* HOW IT WORKS GRID */
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        /* STEP CARD */
+        .step-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            transition: 0.3s;
+            text-align: center;
+        }
+
+        .step-card:hover {
+            transform: translateY(-6px);
+        }
+
+        /* ICON */
+        .step-card img {
+            width: 55px;
+            margin-bottom: 12px;
+        }
+
+        /* TEXT */
+        .step-card h3 {
+            margin: 10px 0;
+        }
+
+        .step-card p {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="logo">Quizzy</div>
+    <div class="nav">
+        <a href="/login">Login</a>
+        <a href="/signup">Signup</a>
+    </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+
+    <div class="hero-content">
+        <h1>🚀 Build Smarter Quizzes</h1>
+        <p>Create, share, and analyze quizzes effortlessly with Quizzy.</p>
+
+        <div class="buttons">
+            <a href="/signup" class="btn btn-primary">Get Started</a>
+            <a href="/login" class="btn btn-secondary">Login</a>
+        </div>
+    </div>
+
+    <!-- Floating Cards -->
+    <div class="floating-card card1">A) Option A</div>
+    <div class="floating-card card2">✔ Correct!</div>
+    <div class="floating-card card3">Score: 8/10</div>
+
+    <!-- Dashboard -->
+    <div class="dashboard-preview">
+        📊 Avg Score: 78%<br>
+        🧠 Attempts: 120+
+    </div>
+
+    <!-- Circles -->
+    <div class="circle circle1"></div>
+    <div class="circle circle2"></div>
+    <div class="circle circle3"></div>
+
+</div>
+
+<!-- STATS -->
+<div class="section">
+    <h2>📊 Trusted by Users</h2>
+
+    <div class="stats">
+        <div class="stat">
+            <h3>100+</h3>
+            <p>Quizzes Created</p>
+        </div>
+        <div class="stat">
+            <h3>1000+</h3>
+            <p>Attempts</p>
+        </div>
+        <div class="stat">
+            <h3>Instant</h3>
+            <p>Evaluation</p>
+        </div>
+    </div>
+</div>
+
+<!-- FEATURES -->
+<!-- FEATURES -->
+<div class="section">
+    <h2>✨ Features</h2>
+    <p>Everything you need to create, manage, and analyze quizzes effortlessly.</p>
+
+    <div class="grid">
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/edit--v1.png">
+            <h3>Easy Quiz Creation</h3>
+            <p>Create quizzes instantly using simple text files.</p>
+        </div>
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/flash-on.png">
+            <h3>Instant Results</h3>
+            <p>Get immediate evaluation with accurate scoring.</p>
+        </div>
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/combo-chart.png">
+            <h3>Analytics Dashboard</h3>
+            <p>Track performance and visualize results easily.</p>
+        </div>
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/export.png">
+            <h3>Export Reports</h3>
+            <p>Download results as PDF or CSV anytime.</p>
+        </div>
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/link.png">
+            <h3>Shareable Links</h3>
+            <p>Send quizzes with a simple link.</p>
+        </div>
+
+        <div class="card">
+            <img src="https://img.icons8.com/color/64/smartphone.png">
+            <h3>Works Everywhere</h3>
+            <p>Fully responsive across all devices.</p>
+        </div>
+
+    </div>
+</div>
+
+<div class="section how-section">
+    <h2>⚙️ How It Works</h2>
+    <p>Just 4 simple steps to get started with Quizzy.</p>
+
+    <div class="steps-grid">
+
+        <div class="step-card">
+            <img src="https://img.icons8.com/color/64/upload.png">
+            <h3>Upload Questions</h3>
+            <p>Upload your MCQ file and answer key.</p>
+        </div>
+
+        <div class="step-card">
+            <img src="https://img.icons8.com/color/64/share.png">
+            <h3>Share Link</h3>
+            <p>Send quiz link to students instantly.</p>
+        </div>
+
+        <div class="step-card">
+            <img src="https://img.icons8.com/color/64/test-passed.png">
+            <h3>Students Attempt</h3>
+            <p>Students take the quiz from any device.</p>
+        </div>
+
+        <div class="step-card">
+            <img src="https://img.icons8.com/color/64/report-card.png">
+            <h3>Get Results</h3>
+            <p>View scores and download reports instantly.</p>
+        </div>
+
+    </div>
+</div>
+<!-- FOOTER -->
+<div class="footer">
+
+    <div class="footer-content">
+        <p class="footer-message">
+            Made with 💜 to make quizzes simpler, smarter, and a little more fun.
+        </p>
+
+        <p class="footer-copy">
+            © 2026 Quizzy · Crafted with care ✨
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

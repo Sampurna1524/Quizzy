@@ -1,19 +1,159 @@
-<h2>Results for Quiz {{ quiz_id }}</h2>
-<a href="/download_report/{{ quiz_id }}">Download CSV Report</a>
-<table border="1">
-    <tr>
-        <th>Name</th>
-        <th>Score</th>
-        <th>Total</th>
-        <th>Time</th>
-    </tr>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz Results</title>
 
-    {% for r in results %}
-    <tr>
-        <td>{{ r[0] }}</td>
-        <td>{{ r[1] }}</td>
-        <td>{{ r[2] }}</td>
-        <td>{{ r[3] }}</td>
-    </tr>
-    {% endfor %}
-</table>
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #f4f6fb;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+        }
+
+        .download-btn {
+            background: white;
+            color: #764ba2;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #eee;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        /* TABLE CARD */
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f1f3ff;
+            color: #555;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        tr:hover {
+            background: #f9f9ff;
+        }
+
+        /* RANK COLORS */
+        .top1 {
+            background: #fff8e1;
+            font-weight: bold;
+        }
+
+        .top2 {
+            background: #f3f3f3;
+        }
+
+        .top3 {
+            background: #fbe9e7;
+        }
+
+        /* SCORE BADGE */
+        .score {
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: #e0f7fa;
+            color: #00796b;
+            font-weight: bold;
+        }
+
+        .empty {
+            text-align: center;
+            color: #777;
+            margin-top: 50px;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>📊 Results for Quiz {{ quiz_id }}</h2>
+    <a href="/download_report/{{ quiz_id }}" class="download-btn">⬇ Download CSV</a>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    {% if results %}
+        <div class="card">
+
+            <table>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                    <th>Total</th>
+                    <th>Time</th>
+                </tr>
+
+                {% for r in results %}
+                <tr class="
+                    {% if loop.index == 1 %}top1
+                    {% elif loop.index == 2 %}top2
+                    {% elif loop.index == 3 %}top3
+                    {% endif %}
+                ">
+                    <td>{{ loop.index }}</td>
+                    <td>{{ r[0] }}</td>
+                    <td><span class="score">{{ r[1] }}</span></td>
+                    <td>{{ r[2] }}</td>
+                    <td>{{ r[3] }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+        </div>
+    {% else %}
+        <div class="empty">
+            <h3>No attempts yet 📭</h3>
+            <p>Students haven't submitted this quiz yet.</p>
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

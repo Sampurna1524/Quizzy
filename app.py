@@ -107,6 +107,12 @@ def parse_answers(text):
     return answers
 
 # ---------------- AUTH ----------------
+@app.route('/')
+def home():
+    if current_user.is_authenticated:
+        return redirect('/dashboard')
+    return render_template('home.html')
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':

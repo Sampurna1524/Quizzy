@@ -2,42 +2,161 @@
 <html>
 <head>
     <title>Quiz</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #f5f7fb;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        /* CONTAINER */
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+
+        /* NAME INPUT */
+        .name-box {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+
+        .name-box input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        /* QUESTION CARD */
+        .card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .question {
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        /* OPTIONS */
+        .option {
+            display: block;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .option:hover {
+            background: #f0f3ff;
+        }
+
+        input[type="radio"] {
+            display: none;
+        }
+
+        input[type="radio"]:checked + span {
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            padding: 10px;
+            display: block;
+        }
+
+        /* SUBMIT BUTTON */
+        .submit-box {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 14px 30px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+    </style>
 </head>
+
 <body>
 
-<h2>Quiz</h2>
+<div class="header">
+    🧠 Quiz Interface
+</div>
+
+<div class="container">
 
 <form method="POST" action="/submit/{{ quiz_id }}">
 
-    <label>
-        Name: <input type="text" name="name" required>
-    </label>
+    <!-- NAME -->
+    <div class="name-box">
+        <label><b>Your Name</b></label><br><br>
+        <input type="text" name="name" required>
+    </div>
 
-    <br><br>
-
+    <!-- QUESTIONS -->
     {% for q in questions %}
         {% set q_index = loop.index %}
 
-        <p><b>{{ q_index }}. {{ q.question }}</b></p>
+        <div class="card">
 
-        {% for key, val in q.options.items() %}
-            <label>
-                <input 
-                    type="radio" 
-                    name="q{{ q_index }}" 
-                    value="{{ key }}"
-                >
-                {{ key }}) {{ val }}
-            </label>
-            <br>
-        {% endfor %}
+            <div class="question">
+                {{ q_index }}. {{ q.question }}
+            </div>
 
-        <br>
+            {% for key, val in q.options.items() %}
+                <label class="option">
+                    <input type="radio" name="q{{ q_index }}" value="{{ key }}">
+                    <span>{{ key }}) {{ val }}</span>
+                </label>
+            {% endfor %}
+
+        </div>
     {% endfor %}
 
-    <button type="submit">Submit</button>
+    <!-- SUBMIT -->
+    <div class="submit-box">
+        <button type="submit">🚀 Submit Quiz</button>
+    </div>
 
 </form>
+
+</div>
 
 </body>
 </html>
