@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz</title>
 
     <style>
@@ -165,6 +166,85 @@
     display: block;
 }
 
+/* ---------------- MOBILE RESPONSIVE ---------------- */
+
+@media (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .header {
+        padding: 18px 20px;
+        padding-left: 85px;
+        font-size: 18px;
+    }
+
+    /* TOP ACTION BUTTONS */
+    .top-actions {
+        top: 12px;
+        left: 12px;
+        gap: 8px;
+    }
+
+    .action-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+    }
+
+    /* MAIN CONTAINER */
+    .container {
+        margin: 20px auto;
+        padding: 15px;
+    }
+
+    /* NAME BOX */
+    .name-box {
+        padding: 18px;
+        border-radius: 14px;
+    }
+
+    .name-box input {
+        width: 100%;
+        font-size: 16px;
+    }
+
+    /* QUESTION CARDS */
+    .card {
+        padding: 18px;
+        border-radius: 16px;
+    }
+
+    .question {
+        font-size: 17px;
+        line-height: 1.5;
+    }
+
+    /* OPTIONS */
+    .option {
+        padding: 12px;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    input[type="radio"]:checked + span {
+        padding: 12px;
+    }
+
+    /* SUBMIT BUTTON */
+    .submit-box {
+        margin-top: 25px;
+    }
+
+    .submit-box button {
+        width: 100%;
+        padding: 15px;
+        font-size: 17px;
+        border-radius: 14px;
+    }
+}
     </style>
 </head>
 

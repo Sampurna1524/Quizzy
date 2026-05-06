@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quizzy</title>
 
     <style>
@@ -287,6 +288,167 @@
             font-size: 14px;
             color: #666;
         }
+
+        /* ---------------- MOBILE RESPONSIVE ---------------- */
+
+@media (max-width: 768px) {
+
+    body {
+        overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .header {
+        padding: 16px 20px;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .logo {
+        font-size: 22px;
+    }
+
+    .nav a {
+        margin-left: 14px;
+        font-size: 15px;
+    }
+
+    /* HERO */
+    .hero {
+        padding: 90px 20px 110px;
+    }
+
+    .hero-content {
+    position: relative;
+    z-index: 5;
+}
+
+    .hero h1 {
+        font-size: 48px;
+        line-height: 1.15;
+    }
+
+    .hero p {
+        font-size: 18px;
+        line-height: 1.6;
+        padding: 0 10px;
+    }
+
+    /* BUTTONS */
+    .buttons {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .btn {
+        width: 85%;
+        text-align: center;
+        margin: 0;
+    }
+
+    /* FLOATING ELEMENTS */
+    /* MOBILE FLOATING CARDS */
+
+.floating-card {
+    display: block;
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    z-index: 1;
+    transform: scale(0.9);
+    opacity: 0.9;
+}
+
+/* TOP LEFT */
+.card1 {
+    top: 24%;
+    left: 4%;
+}
+
+/* TOP RIGHT */
+.card3 {
+    top: 30%;
+    right: 4%;
+}
+
+/* BOTTOM LEFT */
+.card2 {
+    top: 86%;
+    left: 4%;
+}
+
+/* DASHBOARD PREVIEW */
+.dashboard-preview {
+    position: relative;
+    margin: 55px auto 0;
+    right: auto;
+    bottom: auto;
+    width: fit-content;
+    transform: scale(0.9);
+}
+
+    .dashboard-preview {
+        position: relative;
+        bottom: auto;
+        right: auto;
+        margin: 35px auto 0;
+        width: fit-content;
+        font-size: 15px;
+    }
+
+    /* CIRCLES */
+    .circle {
+        opacity: 0.15;
+    }
+
+    .circle3 {
+        display: none;
+    }
+
+    /* SECTION */
+    .section {
+        padding: 30px 20px;
+    }
+
+    .section h2 {
+        font-size: 30px;
+    }
+
+    /* STATS */
+    .stats {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* GRIDS */
+    .grid,
+    .steps-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    /* CARDS */
+    .card,
+    .step-card {
+        padding: 22px;
+    }
+
+    /* FOOTER */
+    .footer {
+        padding: 35px 20px;
+    }
+
+    .footer-message {
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .footer-copy {
+        font-size: 12px;
+    }
+}
     </style>
 </head>
 
@@ -304,7 +466,7 @@
 <div class="hero">
 
     <div class="hero-content">
-        <h1>🚀 Build Smarter Quizzes</h1>
+        <h1>Build Smarter Quizzes</h1>
         <p>Create, share, and analyze quizzes effortlessly with Quizzy.</p>
 
         <div class="buttons">
