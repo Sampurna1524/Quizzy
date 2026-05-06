@@ -1,8 +1,14 @@
 from flask import Flask, render_template, request, redirect, url_for
 import re
 import uuid
-import sqlite3
+
 import json
+import psycopg2
+import os
+
+def get_db():
+    return psycopg2.connect(os.environ.get("DATABASE_URL"))
+
 
 from flask import Response
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -19,43 +25,6 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-# ---------------- DATABASE INIT ----------------
-def init_db():
-    conn = sqlite3.connect("quiz.db")
-    c = conn.cursor()
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE,
-        password TEXT
-    )
-    """)
-
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS quizzes (
-        id TEXT PRIMARY KEY,
-        owner_id INTEGER,
-        questions TEXT,
-        answers TEXT
-    )
-    """)
-
-    # 🔥 ADD THIS BLOCK
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS attempts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        quiz_id TEXT,
-        name TEXT,
-        score INTEGER,
-        total INTEGER,
-        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-    """)
-
-    conn.commit()
-    conn.close()
-
 # ---------------- USER MODEL ----------------
 class User(UserMixin):
     def __init__(self, id, username, password):
@@ -65,10 +34,10 @@ class User(UserMixin):
 
 @login_manager.user_loader
 def load_user(user_id):
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT id, username, password FROM users WHERE id=?", (user_id,))
+    c.execute("SELECT id, username, password FROM users WHERE id=%s", (user_id,))
     row = c.fetchone()
     conn.close()
 
@@ -119,20 +88,37 @@ def signup():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("quiz.db")
+        conn = get_db()
         c = conn.cursor()
 
         try:
-            c.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, password))
+            # 🔹 Check if username already exists
+            c.execute("SELECT id FROM users WHERE username=%s", (username,))
+            existing = c.fetchone()
+
+            if existing:
+                return "Username already exists"
+
+            # 🔹 Generate unique user ID
+            user_id = str(uuid.uuid4())
+
+            # 🔹 Insert new user
+            c.execute(
+                "INSERT INTO users (id, username, password) VALUES (%s, %s, %s)",
+                (user_id, username, password)
+            )
             conn.commit()
 
-            user_id = c.lastrowid
+            # 🔹 Login user immediately
             user = User(user_id, username, password)
             login_user(user)
 
             return redirect('/dashboard')
-        except:
-            return "Username already exists"
+
+        except Exception as e:
+            print("SIGNUP ERROR:", e)
+            return f"Signup error: {str(e)}"
+
         finally:
             conn.close()
 
@@ -144,10 +130,10 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
-        conn = sqlite3.connect("quiz.db")
+        conn = get_db()
         c = conn.cursor()
 
-        c.execute("SELECT id, username, password FROM users WHERE username=?", (username,))
+        c.execute("SELECT id, username, password FROM users WHERE username=%s", (username,))
         row = c.fetchone()
         conn.close()
 
@@ -170,10 +156,10 @@ def logout():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT id FROM quizzes WHERE owner_id=?", (current_user.id,))
+    c.execute("SELECT id FROM quizzes WHERE owner=%s", (current_user.id,))
     rows = c.fetchall()
     conn.close()
 
@@ -202,12 +188,12 @@ def create_quiz():
 
         quiz_id = str(uuid.uuid4())[:8]
 
-        conn = sqlite3.connect("quiz.db")
+        conn = get_db()
         c = conn.cursor()
 
         c.execute("""
-        INSERT INTO quizzes (id, owner_id, questions, answers)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO quizzes (id, owner, questions, answers)
+        VALUES (%s, %s, %s, %s)
         """, (
             quiz_id,
             current_user.id,
@@ -226,10 +212,10 @@ def create_quiz():
 @app.route('/edit_quiz/<quiz_id>', methods=['GET', 'POST'])
 @login_required
 def edit_quiz(quiz_id):
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT owner_id FROM quizzes WHERE id=?", (quiz_id,))
+    c.execute("SELECT owner FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
 
     if not row or str(row[0]) != current_user.id:
@@ -243,12 +229,12 @@ def edit_quiz(quiz_id):
         if q_file:
             text = q_file.read().decode('utf-8')
             questions = parse_mcqs(text)
-            c.execute("UPDATE quizzes SET questions=? WHERE id=?", (json.dumps(questions), quiz_id))
+            c.execute("UPDATE quizzes SET questions=%s WHERE id=%s", (json.dumps(questions), quiz_id))
 
         if a_file:
             ans_text = a_file.read().decode('utf-8')
             answers = parse_answers(ans_text)
-            c.execute("UPDATE quizzes SET answers=? WHERE id=?", (json.dumps(answers), quiz_id))
+            c.execute("UPDATE quizzes SET answers=%s WHERE id=%s", (json.dumps(answers), quiz_id))
 
         conn.commit()
         conn.close()
@@ -261,10 +247,10 @@ def edit_quiz(quiz_id):
 # ---------------- TAKE QUIZ ----------------
 @app.route('/quiz/<quiz_id>')
 def take_quiz(quiz_id):
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT questions FROM quizzes WHERE id=?", (quiz_id,))
+    c.execute("SELECT questions FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     conn.close()
 
@@ -279,10 +265,10 @@ def take_quiz(quiz_id):
 @app.route('/submit/<quiz_id>', methods=['POST'])
 def submit(quiz_id):
     # ---------------- FETCH QUIZ ----------------
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT questions, answers FROM quizzes WHERE id=?", (quiz_id,))
+    c.execute("SELECT questions, answers FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     conn.close()
 
@@ -315,12 +301,12 @@ def submit(quiz_id):
         })
 
     # ---------------- SAVE ATTEMPT (ONLY ONCE) ----------------
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("""
     INSERT INTO attempts (quiz_id, name, score, total)
-    VALUES (?, ?, ?, ?)
+    VALUES (%s, %s, %s, %s)
     """, (quiz_id, name, score, len(questions)))
 
     conn.commit()
@@ -340,13 +326,13 @@ def submit(quiz_id):
 @app.route('/results/<quiz_id>')
 @login_required
 def view_results(quiz_id):
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("""
     SELECT name, score, total, timestamp
     FROM attempts
-    WHERE quiz_id=?
+    WHERE quiz_id=%s
     ORDER BY score DESC
     """, (quiz_id,))
 
@@ -362,13 +348,13 @@ def download_report(quiz_id):
     import csv
     from flask import Response
 
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
     c.execute("""
     SELECT name, score, total, timestamp
     FROM attempts
-    WHERE quiz_id=?
+    WHERE quiz_id=%s
     """, (quiz_id,))
 
     rows = c.fetchall()
@@ -388,10 +374,10 @@ def download_result(quiz_id):
     from reportlab.lib.styles import getSampleStyleSheet
     import io
 
-    conn = sqlite3.connect("quiz.db")
+    conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT questions, answers FROM quizzes WHERE id=?", (quiz_id,))
+    c.execute("SELECT questions, answers FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     conn.close()
 
@@ -447,5 +433,4 @@ def download_result(quiz_id):
 
 # ---------------- RUN ----------------
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True)
