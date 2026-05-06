@@ -316,12 +316,14 @@
     /* HERO */
     .hero {
         padding: 90px 20px 110px;
+        position: relative;
+        overflow: hidden;
     }
 
     .hero-content {
-    position: relative;
-    z-index: 5;
-}
+        position: relative;
+        z-index: 5;
+    }
 
     .hero h1 {
         font-size: 48px;
@@ -351,43 +353,44 @@
     /* FLOATING ELEMENTS */
     /* MOBILE FLOATING CARDS */
 
-.floating-card {
-    display: block;
-    font-size: 12px;
-    padding: 8px 12px;
-    border-radius: 10px;
-    z-index: 1;
-    transform: scale(0.9);
-    opacity: 0.9;
-}
+    .floating-card {
+        display: block;
+        font-size: 12px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        z-index: 3;
+        transform: scale(0.9);
+        opacity: 0.9;
+    }
 
-/* TOP LEFT */
-.card1 {
-    top: 24%;
-    left: 4%;
-}
+    /* TOP LEFT */
+    .card1 {
+        top: 24%;
+        left: 4%;
+    }
 
-/* TOP RIGHT */
-.card3 {
-    top: 30%;
-    right: 4%;
-}
+    /* TOP RIGHT */
+    .card3 {
+        top: 30%;
+        right: 4%;
+    }
 
-/* BOTTOM LEFT */
-.card2 {
-    top: 86%;
-    left: 4%;
-}
+    /* BOTTOM LEFT */
+    .card2 {
+        top: 86%;
+        left: 4%;
+    }
 
-/* DASHBOARD PREVIEW */
-.dashboard-preview {
-    position: relative;
-    margin: 55px auto 0;
-    right: auto;
-    bottom: auto;
-    width: fit-content;
-    transform: scale(0.9);
-}
+    /* DASHBOARD PREVIEW */
+    .dashboard-preview {
+        position: relative;
+        margin: 55px auto 0;
+        right: auto;
+        bottom: auto;
+        width: fit-content;
+        transform: scale(0.9);
+        z-index: 3;
+    }
 
     .dashboard-preview {
         position: relative;
@@ -400,11 +403,35 @@
 
     /* CIRCLES */
     .circle {
-        opacity: 0.15;
+        position: absolute;
+        display: block !important;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.12);
+        backdrop-filter: blur(5px);
+        z-index: 1;
+        opacity: 1;
+    }
+
+    .circle1 {
+        width: 130px;
+        height: 130px;
+        top: 18%;
+        left: -10%;
+    }
+
+    .circle2 {
+        width: 90px;
+        height: 90px;
+        top: 22%;
+        right: -5%;
     }
 
     .circle3 {
-        display: none;
+        display: block !important;
+        width: 170px;
+        height: 170px;
+        bottom: 4%;
+        right: 10%;
     }
 
     /* SECTION */
