@@ -108,13 +108,75 @@
             margin-bottom: 10px;
         }
 
+      .header {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    padding: 20px 40px;
+
+    display: flex;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.icon-actions {
+    display: flex;
+    align-items: center;
+}
+
+.action-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    backdrop-filter: blur(10px);
+
+    cursor: pointer;
+    text-decoration: none;
+
+    transition: all 0.2s ease;
+}
+
+.action-icon:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(255,255,255,0.35);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.action-icon:active {
+    transform: scale(0.95);
+}
     </style>
 </head>
 
 <body>
 
-<div class="header">
-    📊 Quiz Result
+    <div class="header">
+
+    <div class="header-left">
+        <div class="icon-actions">
+            <a href="/" class="action-icon" title="Home">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 10L12 3L21 10V20H3V10Z"
+                          stroke="white" stroke-width="2"
+                          stroke-linejoin="round"/>
+                </svg>
+            </a>
+        </div>
+
+        <span>📊 Quiz Result</span>
+    </div>
+
 </div>
 
 <div class="container">

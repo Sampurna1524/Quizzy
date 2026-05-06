@@ -21,6 +21,7 @@
             padding: 20px 40px;
             font-size: 22px;
             font-weight: bold;
+             padding-left: 150px;
         }
 
         /* CONTAINER */
@@ -99,26 +100,95 @@
             margin-top: 30px;
         }
 
-        button {
-            padding: 14px 30px;
-            border: none;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
+        .submit-box button {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.3s;
+}
 
         button:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
+        .top-actions {
+    position: fixed;
+    top: 15px;
+    left: 20px;
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+}
+
+.action-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    padding: 0; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.35);
+    backdrop-filter: blur(10px);
+
+    cursor: pointer;
+    text-decoration: none;
+
+    transition: all 0.2s ease;
+}
+
+.action-icon:hover {
+    transform: translateY(-2px) scale(1.05);
+    background: rgba(255,255,255,0.35);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.action-icon:active {
+    transform: scale(0.95);
+}
+
+/* hide animation */
+.hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.8);
+}
+
+.action-icon svg {
+    display: block;
+}
+
     </style>
 </head>
 
 <body>
+
+<div class="top-actions">
+    <a href="/" class="action-icon" title="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 10L12 3L21 10V20H3V10Z"
+                  stroke="#2d2d2d" stroke-width="2"
+                  stroke-linejoin="round"/>
+        </svg>
+    </a>
+
+    <button type="button" class="action-icon" id="topSubmitBtn"
+        onclick="document.querySelector('form').submit()" title="Submit">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M20 6L9 17L4 12"
+                  stroke="#2d2d2d" stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+        </svg>
+    </button>
+</div>
 
 <div class="header">
     🧠 Quiz Interface
@@ -162,6 +232,23 @@
 </form>
 
 </div>
+
+<script>
+window.addEventListener("scroll", function () {
+    const btn = document.getElementById("topSubmitBtn");
+
+    const scrollTop = window.scrollY;
+    const docHeight = document.documentElement.scrollHeight;
+    const windowHeight = window.innerHeight;
+
+    // if user is near bottom → hide top submit
+    if (scrollTop + windowHeight >= docHeight - 200) {
+        btn.classList.add("hide");
+    } else {
+        btn.classList.remove("hide");
+    }
+});
+</script>
 
 </body>
 </html>

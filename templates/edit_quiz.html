@@ -27,6 +27,60 @@
         .c2 { width: 80px; height: 80px; bottom: 15%; right: 10%; }
         .c3 { width: 150px; height: 150px; top: 60%; left: 70%; }
 
+        .top-actions {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 20;
+            padding: 4px;
+        }
+
+        .action-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.35);
+            background: rgba(255,255,255,0.22);
+            color: #333;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+            backdrop-filter: blur(10px);
+            line-height: 1;
+            box-sizing: border-box;
+            vertical-align: middle;
+            font-size: 20px;
+        }
+
+        .action-icon:hover {
+            transform: translateY(-2px) scale(1.05);
+            background: rgba(255,255,255,0.4);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+
+        .action-icon:active {
+            transform: scale(0.95);
+        }
+
+        .action-icon:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.25);
+        }
+
+        button.action-icon {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding: 0;
+            margin: 0;
+        }
+
         /* CARD */
         .card {
             background: rgba(255,255,255,0.95);
@@ -160,6 +214,22 @@
 <div class="circle c1"></div>
 <div class="circle c2"></div>
 <div class="circle c3"></div>
+
+<div class="top-actions">
+    <!-- Back -->
+    <button type="button" class="action-icon" onclick="history.back();" title="Back">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18L9 12L15 6" stroke="#333" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </button>
+
+    <!-- Home -->
+    <a href="/" class="action-icon" title="Home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M3 10L12 3L21 10V20H3V10Z" stroke="#333" stroke-width="2" stroke-linejoin="round"/>
+        </svg>
+    </a>
+</div>
 
 <!-- Card -->
 <div class="card">
