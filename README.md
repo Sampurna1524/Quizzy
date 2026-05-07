@@ -174,6 +174,6 @@ Quizzy was built to make quiz creation and evaluation simple, modern, and access
 
 # 👨‍💻 Author
 
-Your Name Here
+Sampurna Roy
 
 GitHub: https://github.com/Sampurna1524
