@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 import re
 import uuid
+import difflib
 
 import json
 import psycopg2
@@ -21,6 +22,7 @@ def init_db():
     try:
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS teacher_message TEXT")
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_name TEXT")
+        c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_type TEXT DEFAULT 'mcq'")
         conn.commit()
     except Exception as e:
         print(f"Database migration error: {e}")
@@ -28,11 +30,12 @@ def init_db():
         conn.close()
 
 
-def ensure_quiz_name_column():
+def ensure_quiz_columns():
     conn = get_db()
     c = conn.cursor()
     try:
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_name TEXT")
+        c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_type TEXT DEFAULT 'mcq'")
         conn.commit()
     except Exception as e:
         print(f"Database migration error: {e}")
@@ -107,6 +110,227 @@ def parse_answers(text):
         if match:
             answers[str(match.group(1))] = match.group(2)
     return answers
+
+
+def normalize_text(value):
+    if not isinstance(value, str):
+        return ""
+    value = value.strip().lower()
+    value = re.sub(r'[\W_]+', ' ', value)
+    return re.sub(r'\s+', ' ', value).strip()
+
+
+def is_written_answer_correct(user_answer, correct_answer):
+    if not user_answer or not correct_answer:
+        return False
+
+    user = normalize_text(user_answer)
+    correct = normalize_text(correct_answer)
+
+    if user == correct:
+        return True
+    if correct in user or user in correct:
+        return True
+
+    user_tokens = user.split()
+    correct_tokens = correct.split()
+    if not correct_tokens:
+        return False
+
+    bad_answer_phrases = {
+        'idk', 'dont know', 'do not know', 'no idea', 'not sure',
+        'i think', 'i guess', 'maybe', 'perhaps', 'hehe', 'haha', 'hmm'
+    }
+    joined_user = ' '.join(user_tokens)
+    if len(user_tokens) <= 4 and any(phrase in joined_user for phrase in bad_answer_phrases):
+        return False
+
+    user_set = set(user_tokens)
+    correct_set = set(correct_tokens)
+    common_tokens = user_set & correct_set
+    token_ratio = len(common_tokens) / len(correct_tokens)
+    if token_ratio >= 0.75:
+        return True
+
+    stopwords = {
+        'the', 'a', 'an', 'and', 'or', 'of', 'in', 'on', 'to', 'for',
+        'with', 'as', 'by', 'at', 'from', 'about', 'into', 'over',
+        'after', 'before', 'between', 'is', 'are', 'was', 'were', 'be',
+        'it', 'this', 'that', 'these', 'those'
+    }
+
+    significant_correct = [t for t in correct_tokens if t not in stopwords]
+    significant_user = [t for t in user_tokens if t not in stopwords]
+    if significant_correct:
+        significant_match = len(set(significant_correct) & set(significant_user)) / len(set(significant_correct))
+        if significant_match >= 0.7:
+            # require more substance when the answer is short
+            return len(user_tokens) >= 3
+
+    similarity = difflib.SequenceMatcher(None, user, correct).ratio()
+    if similarity >= 0.80:
+        return True
+
+    if len(user_tokens) < 5:
+        return False
+
+    if token_ratio >= 0.60 and similarity >= 0.70:
+        return True
+
+    return False
+
+
+def parse_mcqs(text):
+    questions = []
+    answers = {}
+    blocks = re.split(r'\n(?=\d+\.)', text.strip())
+
+    for block in blocks:
+        lines = block.strip().split("\n")
+        q_text = re.sub(r'^\d+\.\s*', '', lines[0])
+
+        options = {}
+        inline_answer = None
+        for line in lines[1:]:
+            answer_match = re.match(r'ANSWER:\s*([A-D])', line.strip(), re.IGNORECASE)
+            if answer_match:
+                inline_answer = answer_match.group(1).upper()
+                continue
+
+            match = re.match(r'\s*([A-D])\)\s*(.*)', line)
+            if match:
+                options[match.group(1)] = match.group(2).strip()
+
+        questions.append({
+            "type": "mcq",
+            "question": q_text,
+            "options": options
+        })
+        if inline_answer:
+            answers[str(len(questions))] = inline_answer
+
+    return questions, answers
+
+
+def parse_written_quiz(text):
+    questions = []
+    answers = {}
+    for i, line in enumerate(text.strip().split("\n"), start=1):
+        if not line.strip():
+            continue
+        if '|' in line:
+            q_text, answer_text = line.split('|', 1)
+        elif ':' in line and line.count(':') == 1:
+            q_text, answer_text = line.split(':', 1)
+        elif '=' in line and line.count('=') == 1:
+            q_text, answer_text = line.split('=', 1)
+        else:
+            continue
+        q_text = q_text.strip()
+        answer_text = answer_text.strip()
+        if q_text and answer_text:
+            questions.append({
+                "type": "written",
+                "question": q_text
+            })
+            answers[str(len(questions))] = answer_text
+    return questions, answers
+
+
+def parse_match_quiz(text):
+    pairs = []
+    for line in text.strip().split("\n"):
+        if not line.strip():
+            continue
+        if '->' in line:
+            left, right = line.split('->', 1)
+        elif ':' in line and line.count(':') == 1:
+            left, right = line.split(':', 1)
+        elif '=' in line and line.count('=') == 1:
+            left, right = line.split('=', 1)
+        elif '-' in line and line.count('-') == 1:
+            left, right = line.split('-', 1)
+        else:
+            continue
+        pairs.append({
+            "left": left.strip(),
+            "right": right.strip()
+        })
+
+    questions = []
+    answers = {}
+    if pairs:
+        for idx, pair in enumerate(pairs, start=1):
+            pair['id'] = str(idx)
+        questions.append({
+            "type": "match",
+            "question": "Match the columns",
+            "pairs": pairs
+        })
+        answers["1"] = {str(idx): str(idx) for idx in range(1, len(pairs)+1)}
+    return questions, answers
+
+
+def parse_mix_quiz(text):
+    questions = []
+    answers = {}
+    blocks = re.split(r'\n\s*\n', text.strip())
+    for block in blocks:
+        if not block.strip():
+            continue
+        lines = block.strip().split("\n")
+        mcq_lines = [line for line in lines if re.match(r'\s*[A-D]\)', line)]
+        answer_line = None
+        for line in lines:
+            match = re.match(r'ANSWER:\s*(.*)', line.strip(), re.IGNORECASE)
+            if match:
+                answer_line = match.group(1).strip()
+                break
+
+        if mcq_lines:
+            block_questions, block_answers = parse_mcqs(block)
+            idx_offset = len(questions)
+            for q in block_questions:
+                questions.append(q)
+            for key, value in block_answers.items():
+                answers[str(idx_offset + int(key))] = value
+            continue
+
+        if '|' in block or (':' in block and len(lines) == 1) or ('=' in block and len(lines) == 1):
+            block_questions, block_answers = parse_written_quiz(block)
+            idx_offset = len(questions)
+            for q in block_questions:
+                questions.append(q)
+            for key, value in block_answers.items():
+                answers[str(idx_offset + int(key))] = value
+            continue
+
+        match_pairs = []
+        for line in lines:
+            if '->' in line:
+                left, right = line.split('->', 1)
+            elif ':' in line and line.count(':') == 1:
+                left, right = line.split(':', 1)
+            elif '=' in line and line.count('=') == 1:
+                left, right = line.split('=', 1)
+            elif '-' in line and line.count('-') == 1:
+                left, right = line.split('-', 1)
+            else:
+                continue
+            match_pairs.append({"left": left.strip(), "right": right.strip()})
+
+        if match_pairs:
+            for idx, pair in enumerate(match_pairs, start=1):
+                pair['id'] = str(idx)
+            questions.append({
+                "type": "match",
+                "question": "Match the columns",
+                "pairs": match_pairs
+            })
+            answers[str(len(questions))] = {str(idx): str(idx) for idx in range(1, len(match_pairs)+1)}
+            continue
+
+    return questions, answers
 
 # -------- PDF EXTRACTION --------
 def extract_text_from_pdf(file_obj):
@@ -232,13 +456,13 @@ def dashboard():
     c = conn.cursor()
 
     try:
-        c.execute("SELECT id, quiz_name FROM quizzes WHERE owner=%s", (current_user.id,))
+        c.execute("SELECT id, quiz_name, quiz_type FROM quizzes WHERE owner=%s", (current_user.id,))
     except psycopg2.errors.UndefinedColumn:
         conn.close()
-        ensure_quiz_name_column()
+        ensure_quiz_columns()
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT id, quiz_name FROM quizzes WHERE owner=%s", (current_user.id,))
+        c.execute("SELECT id, quiz_name, quiz_type FROM quizzes WHERE owner=%s", (current_user.id,))
 
     rows = c.fetchall()
     conn.close()
@@ -246,7 +470,8 @@ def dashboard():
     quizzes = [
         {
             "id": row[0],
-            "name": row[1] if row[1] else 'Untitled Quiz'
+            "name": row[1] if row[1] else 'Untitled Quiz',
+            "type": row[2] if row[2] else 'mcq'
         }
         for row in rows
     ]
@@ -282,17 +507,26 @@ def create_quiz():
         a_file = request.files.get('answers_file')
         quiz_name = request.form.get('quiz_name', '').strip()
         teacher_message = request.form.get('teacher_message', '').strip()
+        quiz_type = request.form.get('quiz_type', 'mcq')
 
         questions = []
         answers = {}
 
         if q_file:
             text = extract_text_from_file(q_file, q_file.filename)
-            questions = parse_mcqs(text)
+            if quiz_type == 'written':
+                questions, answers = parse_written_quiz(text)
+            elif quiz_type == 'match':
+                questions, answers = parse_match_quiz(text)
+            elif quiz_type == 'mix':
+                questions, answers = parse_mix_quiz(text)
+            else:
+                questions, answers = parse_mcqs(text)
 
-        if a_file:
+        if a_file and quiz_type == 'mcq':
             ans_text = extract_text_from_file(a_file, a_file.filename)
-            answers = parse_answers(ans_text)
+            file_answers = parse_answers(ans_text)
+            answers.update(file_answers)
 
         quiz_id = str(uuid.uuid4())[:8]
 
@@ -300,15 +534,16 @@ def create_quiz():
         c = conn.cursor()
 
         c.execute("""
-        INSERT INTO quizzes (id, owner, questions, answers, teacher_message, quiz_name)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO quizzes (id, owner, questions, answers, teacher_message, quiz_name, quiz_type)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         """, (
             quiz_id,
             current_user.id,
             json.dumps(questions),
             json.dumps(answers),
             teacher_message,
-            quiz_name
+            quiz_name,
+            quiz_type
         ))
 
         conn.commit()
@@ -337,32 +572,41 @@ def edit_quiz(quiz_id):
         a_file = request.files.get('answers_file')
         quiz_name = request.form.get('quiz_name', '').strip()
         teacher_message = request.form.get('teacher_message', '').strip()
+        quiz_type = request.form.get('quiz_type', 'mcq')
 
         if q_file:
             text = extract_text_from_file(q_file, q_file.filename)
-            questions = parse_mcqs(text)
-            c.execute("UPDATE quizzes SET questions=%s WHERE id=%s", (json.dumps(questions), quiz_id))
+            if quiz_type == 'written':
+                questions, answers = parse_written_quiz(text)
+            elif quiz_type == 'match':
+                questions, answers = parse_match_quiz(text)
+            elif quiz_type == 'mix':
+                questions, answers = parse_mix_quiz(text)
+            else:
+                questions, answers = parse_mcqs(text)
+            c.execute("UPDATE quizzes SET questions=%s, answers=%s WHERE id=%s", (json.dumps(questions), json.dumps(answers), quiz_id))
 
-        if a_file:
+        if a_file and quiz_type == 'mcq':
             ans_text = extract_text_from_file(a_file, a_file.filename)
             answers = parse_answers(ans_text)
             c.execute("UPDATE quizzes SET answers=%s WHERE id=%s", (json.dumps(answers), quiz_id))
 
-        c.execute("UPDATE quizzes SET quiz_name=%s, teacher_message=%s WHERE id=%s", (quiz_name, teacher_message, quiz_id))
+        c.execute("UPDATE quizzes SET quiz_name=%s, teacher_message=%s, quiz_type=%s WHERE id=%s", (quiz_name, teacher_message, quiz_type, quiz_id))
 
         conn.commit()
         conn.close()
 
         return redirect('/dashboard')
 
-    # Get current quiz_name and teacher_message for the form
-    c.execute("SELECT quiz_name, teacher_message FROM quizzes WHERE id=%s", (quiz_id,))
+    # Get current quiz_name, teacher_message and type for the form
+    c.execute("SELECT quiz_name, teacher_message, quiz_type FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     quiz_name = row[0] if row else ''
     teacher_message = row[1] if row else ''
+    quiz_type = row[2] if row else 'mcq'
 
     conn.close()
-    return render_template("edit_quiz.html", quiz_id=quiz_id, quiz_name=quiz_name, teacher_message=teacher_message)
+    return render_template("edit_quiz.html", quiz_id=quiz_id, quiz_name=quiz_name, teacher_message=teacher_message, quiz_type=quiz_type)
 
 # ---------------- TAKE QUIZ ----------------
 @app.route('/quiz/<quiz_id>')
@@ -371,13 +615,13 @@ def take_quiz(quiz_id):
     c = conn.cursor()
 
     try:
-        c.execute("SELECT questions, teacher_message, quiz_name FROM quizzes WHERE id=%s", (quiz_id,))
+        c.execute("SELECT questions, teacher_message, quiz_name, quiz_type FROM quizzes WHERE id=%s", (quiz_id,))
     except psycopg2.errors.UndefinedColumn:
         conn.close()
-        ensure_quiz_name_column()
+        ensure_quiz_columns()
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT questions, teacher_message, quiz_name FROM quizzes WHERE id=%s", (quiz_id,))
+        c.execute("SELECT questions, teacher_message, quiz_name, quiz_type FROM quizzes WHERE id=%s", (quiz_id,))
 
     row = c.fetchone()
     conn.close()
@@ -388,8 +632,103 @@ def take_quiz(quiz_id):
     questions = json.loads(row[0])
     teacher_message = row[1] or ''
     quiz_name = row[2] or ''
+    quiz_type = row[3] or 'mcq'
 
-    return render_template("quiz.html", questions=questions, quiz_id=quiz_id, teacher_message=teacher_message, quiz_name=quiz_name)
+    return render_template("quiz.html", questions=questions, quiz_id=quiz_id, teacher_message=teacher_message, quiz_name=quiz_name, quiz_type=quiz_type)
+
+
+def evaluate_submission(questions, answers, form):
+    score = 0
+    total = 0
+    results = []
+
+    for i, q in enumerate(questions, start=1):
+        q_type = q.get('type', 'mcq')
+
+        if q_type == 'mcq':
+            user_ans = form.get(f"q{i}")
+            correct_ans = answers.get(str(i)) or q.get('answer') or ''
+            is_correct = user_ans == correct_ans
+            if is_correct:
+                score += 1
+            total += 1
+            results.append({
+                "type": "mcq",
+                "question": q.get('question'),
+                "options": q.get('options', {}),
+                "your": user_ans if user_ans else "Not Answered",
+                "correct": correct_ans,
+                "is_correct": is_correct
+            })
+
+        elif q_type == 'written':
+            user_ans = form.get(f"q{i}", "").strip()
+            correct_ans = answers.get(str(i)) or q.get('answer') or ''
+            is_correct = is_written_answer_correct(user_ans, correct_ans)
+            if is_correct:
+                score += 1
+            total += 1
+            results.append({
+                "type": "written",
+                "question": q.get('question'),
+                "your": user_ans if user_ans else "Not Answered",
+                "correct": correct_ans,
+                "is_correct": is_correct
+            })
+
+        elif q_type == 'match':
+            pairs = q.get('pairs', [])
+            pair_results = []
+            correct_count = 0
+            for idx, pair in enumerate(pairs, start=1):
+                user_value = form.get(f"q{i}_{idx}")
+                selected_text = "Not Answered"
+                selected_index = ""
+                if user_value and user_value.isdigit():
+                    selected_index = user_value
+                    numeric_index = int(user_value) - 1
+                    if 0 <= numeric_index < len(pairs):
+                        selected_text = pairs[numeric_index].get('right', selected_text)
+                expected_text = pair.get('right')
+                is_pair_correct = user_value == str(idx)
+                if is_pair_correct:
+                    correct_count += 1
+                pair_results.append({
+                    "left": pair.get('left'),
+                    "right": expected_text,
+                    "selected": selected_text,
+                    "selected_index": selected_index,
+                    "expected_index": str(idx),
+                    "is_correct": is_pair_correct
+                })
+            score += correct_count
+            total += len(pairs)
+            results.append({
+                "type": "match",
+                "question": q.get('question'),
+                "pairs": pairs,
+                "pair_results": pair_results,
+                "correct_count": correct_count,
+                "total_pairs": len(pairs),
+                "is_correct": correct_count == len(pairs)
+            })
+
+        else:
+            user_ans = form.get(f"q{i}", "").strip()
+            correct_ans = answers.get(str(i)) or q.get('answer') or ''
+            is_correct = is_written_answer_correct(user_ans, correct_ans)
+            if is_correct:
+                score += 1
+            total += 1
+            results.append({
+                "type": "written",
+                "question": q.get('question'),
+                "your": user_ans if user_ans else "Not Answered",
+                "correct": correct_ans,
+                "is_correct": is_correct
+            })
+
+    return score, total, results
 
 # ---------------- SUBMIT ----------------
 @app.route('/submit/<quiz_id>', methods=['POST'])
@@ -408,27 +747,8 @@ def submit(quiz_id):
     questions = json.loads(row[0])
     answers = json.loads(row[1])
 
-    # ---------------- INIT ----------------
-    score = 0
-    results = []
     name = request.form.get("name")
-
-    # ---------------- EVALUATE ----------------
-    for i, q in enumerate(questions, start=1):
-        user_ans = request.form.get(f"q{i}")
-        correct_ans = answers.get(str(i))
-
-        is_correct = user_ans == correct_ans
-        if is_correct:
-            score += 1
-
-        results.append({
-            "question": q["question"],
-            "options": q["options"],
-            "your": user_ans if user_ans else "Not Answered",
-            "correct": correct_ans,
-            "is_correct": is_correct
-        })
+    score, total, results = evaluate_submission(questions, answers, request.form)
 
     # ---------------- SAVE ATTEMPT (ONLY ONCE) ----------------
     conn = get_db()
@@ -437,7 +757,7 @@ def submit(quiz_id):
     c.execute("""
     INSERT INTO attempts (quiz_id, name, score, total)
     VALUES (%s, %s, %s, %s)
-    """, (quiz_id, name, score, len(questions)))
+    """, (quiz_id, name, score, total))
 
     conn.commit()
     conn.close()
@@ -446,7 +766,7 @@ def submit(quiz_id):
     return render_template(
         "result.html",
         score=score,
-        total=len(questions),
+        total=total,
         results=results,
         name=name,
         quiz_id=quiz_id
@@ -519,37 +839,39 @@ def download_result(quiz_id):
 
     name = request.form.get("name")
 
+    score, total, results = evaluate_submission(questions, answers, request.form)
+
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=letter)
 
     styles = getSampleStyleSheet()
     content = []
 
-    score = 0
-
     content.append(Paragraph(f"Result for: {name}", styles['Title']))
     content.append(Spacer(1, 10))
+    content.append(Paragraph(f"Score: {score}/{total}", styles['Normal']))
+    content.append(Spacer(1, 10))
 
-    for i, q in enumerate(questions, start=1):
-        user_ans = request.form.get(f"q{i}")
-        correct_ans = answers.get(str(i))
-
-        is_correct = user_ans == correct_ans
-        if is_correct:
-            score += 1
-
-        content.append(Paragraph(f"{i}. {q['question']}", styles['Normal']))
+    for i, result in enumerate(results, start=1):
+        content.append(Paragraph(f"{i}. {result['question']}", styles['Normal']))
         content.append(Spacer(1, 5))
 
-        content.append(Paragraph(f"Your Answer: {user_ans if user_ans else 'Not Answered'}", styles['Normal']))
-        content.append(Paragraph(f"Correct Answer: {correct_ans}", styles['Normal']))
+        if result['type'] == 'mcq':
+            content.append(Paragraph(f"Your Answer: {result['your']}", styles['Normal']))
+            content.append(Paragraph(f"Correct Answer: {result['correct']}", styles['Normal']))
+        elif result['type'] == 'written':
+            content.append(Paragraph(f"Your Answer: {result['your']}", styles['Normal']))
+            content.append(Paragraph(f"Correct Answer: {result['correct']}", styles['Normal']))
+        elif result['type'] == 'match':
+            for pair_result in result['pair_results']:
+                content.append(Paragraph(f"{pair_result['left']} → Your: {pair_result['selected']} | Correct: {pair_result.get('right', '')}", styles['Normal']))
+        else:
+            content.append(Paragraph(f"Your Answer: {result['your']}", styles['Normal']))
+            content.append(Paragraph(f"Correct Answer: {result['correct']}", styles['Normal']))
 
-        result_text = "Correct ✅" if is_correct else "Wrong ❌"
+        result_text = "Correct ✅" if result['is_correct'] else "Wrong ❌"
         content.append(Paragraph(result_text, styles['Normal']))
-
         content.append(Spacer(1, 10))
-
-    content.insert(1, Paragraph(f"Score: {score}/{len(questions)}", styles['Normal']))
 
     doc.build(content)
 

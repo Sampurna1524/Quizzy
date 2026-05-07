@@ -13,7 +13,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* FLOATING BACKGROUND */
@@ -140,14 +141,20 @@
             color: #444;
         }
 
-        input[type="file"] {
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
             width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="file"] {
             border: none;
             background: transparent;
         }
 
         textarea {
-            width: 100%;
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 10px;
@@ -334,15 +341,26 @@
     <form method="POST" enctype="multipart/form-data">
 
         <div class="file-box">
+            <label>🎯 Quiz Type</label>
+            <select name="quiz_type" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <option value="mcq" {% if quiz_type == 'mcq' %}selected{% endif %}>Multiple Choice</option>
+                <option value="written" {% if quiz_type == 'written' %}selected{% endif %}>Written Answer</option>
+                <option value="match" {% if quiz_type == 'match' %}selected{% endif %}>Match Columns</option>
+                <option value="mix" {% if quiz_type == 'mix' %}selected{% endif %}>Mixed Quiz</option>
+            </select>
+            <div class="hint">Update the quiz mode and optionally upload new files.</div>
+        </div>
+
+        <div class="file-box">
             <label>📄 Replace Questions</label>
             <input type="file" name="questions_file" accept=".txt,.pdf,.doc,.docx">
-            <div class="hint">Upload new MCQ file (.txt, .pdf, .doc, .docx)</div>
+            <div class="hint">Upload a new questions file in the selected quiz format.</div>
         </div>
 
         <div class="file-box">
             <label>✅ Replace Answers</label>
             <input type="file" name="answers_file" accept=".txt,.pdf,.doc,.docx">
-            <div class="hint">Upload answer key file (.txt, .pdf, .doc, .docx)</div>
+            <div class="hint">Upload a new answer key if you are updating an MCQ quiz.</div>
         </div>
 
         <div class="file-box">            <label>🏷️ Quiz Name</label>

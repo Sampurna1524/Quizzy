@@ -13,7 +13,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         /* FLOATING BACKGROUND CIRCLES */
@@ -125,14 +126,20 @@
             color: #444;
         }
 
-        input[type="file"] {
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
             width: 100%;
+            box-sizing: border-box;
+        }
+
+        input[type="file"] {
             border: none;
             background: transparent;
         }
 
         textarea {
-            width: 100%;
             border: 1px solid #ccc;
             border-radius: 8px;
             padding: 10px;
@@ -296,15 +303,35 @@
         </div>
 
         <div class="file-box">
+            <label>🎯 Quiz Type</label>
+            <select name="quiz_type" required style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+                <option value="mcq">Multiple Choice</option>
+                <option value="written">Written Answer</option>
+                <option value="match">Match Columns</option>
+                <option value="mix">Mixed Quiz</option>
+            </select>
+            <div class="hint">Choose the quiz mode for your questions.</div>
+        </div>
+
+        <div class="file-box">
             <label>📄 Questions File</label>
             <input type="file" name="questions_file" accept=".txt,.pdf,.docx,.doc" required>
-            <div class="hint">Supports .txt, .pdf, or .docx formats (MCQs)</div>
+            <div class="hint">Supports .txt, .pdf, or .docx formats. For written or match quizzes, use the simple text formats below.</div>
         </div>
 
         <div class="file-box">
             <label>✅ Answer Key (Optional)</label>
             <input type="file" name="answers_file" accept=".txt,.pdf,.docx,.doc">
-            <div class="hint">Supports .txt, .pdf, or .docx formats</div>
+            <div class="hint">Use this for MCQ answer keys only. Written and match quizzes can include answers in the main questions file.</div>
+        </div>
+        <div class="file-box">
+            <label>📘 Quiz Instructions</label>
+            <ul style="font-size:13px; line-height:1.5; color:#555; margin:8px 0 0 0; padding-left: 18px; text-align:left;">
+                <li><strong>MCQ:</strong> standard numbered questions with A/B/C/D options. Optionally add <code>ANSWER: B</code> under each block or upload a separate answer key.</li>
+                <li><strong>Written:</strong> one question per line using <code>Question ? | Answer</code> or <code>Question ? = Answer</code>.</li>
+                <li><strong>Match:</strong> one left-right pair per line using <code>Left = Right</code> or <code>Left -> Right</code>.</li>
+                <li><strong>Mixed:</strong> combine MCQ, written, and match blocks separated by blank lines.</li>
+            </ul>
         </div>
 
         <div class="file-box">

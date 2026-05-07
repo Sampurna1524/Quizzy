@@ -357,12 +357,32 @@
                 {{ q_index }}. {{ q.question }}
             </div>
 
-            {% for key, val in q.options.items() %}
-                <label class="option">
-                    <input type="radio" name="q{{ q_index }}" value="{{ key }}">
-                    <span>{{ key }}) {{ val }}</span>
-                </label>
-            {% endfor %}
+            {% if q.type == 'mcq' %}
+                {% for key, val in q.options.items() %}
+                    <label class="option">
+                        <input type="radio" name="q{{ q_index }}" value="{{ key }}">
+                        <span>{{ key }}) {{ val }}</span>
+                    </label>
+                {% endfor %}
+            {% elif q.type == 'written' %}
+                <textarea name="q{{ q_index }}" rows="4" placeholder="Type your answer here..." style="width:100%;border:1px solid #ccc;border-radius:10px;padding:12px;font-family:inherit;font-size:14px;"></textarea>
+            {% elif q.type == 'match' %}
+                <div style="display:grid; gap:12px;">
+                    {% for pair in q.pairs %}
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div style="flex:1; padding:12px; border:1px solid #ddd; border-radius:10px; background:#fbfbfb;">{{ pair.left }}</div>
+                            <select name="q{{ q_index }}_{{ loop.index }}" style="flex:1; padding:12px; border:1px solid #ccc; border-radius:10px; background:white;">
+                                <option value="">Select match</option>
+                                {% for option in q.pairs %}
+                                    <option value="{{ loop.index }}">{{ option.right }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <textarea name="q{{ q_index }}" rows="4" placeholder="Type your answer here..." style="width:100%;border:1px solid #ccc;border-radius:10px;padding:12px;font-family:inherit;font-size:14px;"></textarea>
+            {% endif %}
 
         </div>
     {% endfor %}
