@@ -266,84 +266,154 @@
     <!-- SCORE -->
     <div class="score-card">
         <h2>Result for {{ name if name else "Anonymous" }}</h2>
-        <div class="score">{{ score }}/{{ total }}</div>
+        
+        {% if has_answer_key %}
+            <div class="score">{{ score }}/{{ total }}</div>
 
-        <form method="POST" action="/download_result/{{ quiz_id }}">
-            <input type="hidden" name="name" value="{{ name }}">
-            {% for r in results %}
-                {% set result_index = loop.index %}
-                <input type="hidden" name="q{{ result_index }}" value="{{ r.your if r.type != 'match' else '' }}">
-                {% if r.type == 'match' %}
-                    {% for pair in r.pair_results %}
-                        <input type="hidden" name="q{{ result_index }}_{{ loop.index }}" value="{{ pair.selected_index }}">
-                    {% endfor %}
-                {% endif %}
-            {% endfor %}
+            <form method="POST" action="/download_result/{{ quiz_id }}">
+                <input type="hidden" name="name" value="{{ name }}">
+                {% for r in results %}
+                    {% set result_index = loop.index %}
+                    <input type="hidden" name="q{{ result_index }}" value="{{ r.your if r.type != 'match' else '' }}">
+                    {% if r.type == 'match' %}
+                        {% for pair in r.pair_results %}
+                            <input type="hidden" name="q{{ result_index }}_{{ loop.index }}" value="{{ pair.selected_index }}">
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
 
-            <button class="download-btn">⬇ Download PDF Report</button>
-        </form>
+                <button class="download-btn">⬇ Download PDF Report</button>
+            </form>
+        {% else %}
+            <div style="padding: 20px; background: #e3f2fd; border-radius: 10px; margin: 20px 0; text-align: left;">
+                <h3 style="margin: 0 0 10px 0; color: #1565c0;">✅ Quiz Submitted Successfully!</h3>
+                <p style="margin: 0; color: #0d47a1; font-size: 14px;">
+                    Your responses have been recorded and will be reviewed manually by your teacher. You'll receive your score soon.
+                </p>
+            </div>
+        {% endif %}
     </div>
 
     <!-- QUESTIONS -->
-    {% for r in results %}
-        <div class="card">
+    {% if has_answer_key %}
+        {% for r in results %}
+            <div class="card">
 
-            <div class="question">
-                {{ loop.index }}. {{ r.question }}
-            </div>
+                <div class="question">
+                    {{ loop.index }}. {{ r.question }}
+                </div>
 
-            {% if r.type == 'mcq' %}
-                {% if r.your == "Not Answered" %}
-                    <div class="not-answered">⚠ Not Answered</div>
+                {% if r.type == 'mcq' %}
+                    {% if r.your == "Not Answered" %}
+                        <div class="not-answered">⚠ Not Answered</div>
+                    {% endif %}
+
+                    {% for key, val in r.options.items() %}
+                        {% if key == r.correct %}
+                            <div class="option correct">
+                                ✔ {{ key }}) {{ val }}
+                            </div>
+                        {% elif key == r.your %}
+                            <div class="option wrong">
+                                ❌ {{ key }}) {{ val }}
+                            </div>
+                        {% else %}
+                            <div class="option neutral">
+                                {{ key }}) {{ val }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% elif r.type == 'written' %}
+                    {% if r.your == "Not Answered" %}
+                        <div class="not-answered">⚠ Not Answered</div>
+                    {% endif %}
+                    <div class="option neutral">Your Answer: {{ r.your }}</div>
+                    <div class="option neutral">Correct Answer: {{ r.correct }}</div>
+                    <div class="option {% if r.is_correct %}correct{% else %}wrong{% endif %}">
+                        {% if r.is_correct %}✔ Correct{% else %}❌ Incorrect{% endif %}
+                    </div>
+                {% elif r.type == 'match' %}
+                    <div class="option neutral">Match results:</div>
+                    {% for pair in r.pair_results %}
+                        <div class="option {% if pair.is_correct %}correct{% else %}wrong{% endif %}">
+                            {{ pair.left }} → Your: {{ pair.selected }} / Correct: {{ pair.right }}
+                        </div>
+                    {% endfor %}
+                    <div class="option {% if r.correct_count == r.total_pairs %}correct{% else %}wrong{% endif %}">
+                        {{ r.correct_count }}/{{ r.total_pairs }} pairs correct
+                    </div>
+                {% else %}
+                    {% if r.your == "Not Answered" %}
+                        <div class="not-answered">⚠ Not Answered</div>
+                    {% endif %}
+                    <div class="option neutral">Your Answer: {{ r.your }}</div>
+                    <div class="option neutral">Correct Answer: {{ r.correct }}</div>
+                    <div class="option {% if r.is_correct %}correct{% else %}wrong{% endif %}">
+                        {% if r.is_correct %}✔ Correct{% else %}❌ Incorrect{% endif %}
+                    </div>
                 {% endif %}
 
-                {% for key, val in r.options.items() %}
-                    {% if key == r.correct %}
-                        <div class="option correct">
-                            ✔ {{ key }}) {{ val }}
-                        </div>
-                    {% elif key == r.your %}
-                        <div class="option wrong">
-                            ❌ {{ key }}) {{ val }}
-                        </div>
-                    {% else %}
-                        <div class="option neutral">
+            </div>
+        {% endfor %}
+    {% else %}
+        {% for r in results %}
+            <div class="card">
+
+                <div class="question">
+                    {{ loop.index }}. {{ r.question }}
+                </div>
+
+                {% if r.type == 'mcq' %}
+                    <div style="margin-top: 10px;">
+                        <strong>Your Answer:</strong>
+                        {% if r.your == "Not Answered" %}
+                            <span class="not-answered">⚠ Not Answered</span>
+                        {% else %}
+                            <span style="color: #667eea; font-weight: 600;">{{ r.your }}</span>
+                            {% if r.options.get(r.your) %}
+                                <div style="font-size: 12px; color: #666; margin-top: 5px;">{{ r.options[r.your] }}</div>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 12px;">All Options:</div>
+                    {% for key, val in r.options.items() %}
+                        <div class="option {% if key == r.your %}neutral{% else %}neutral{% endif %}" style="border-left: 3px solid {% if key == r.your %}#667eea{% else %}#e0e0e0{% endif %};">
                             {{ key }}) {{ val }}
                         </div>
-                    {% endif %}
-                {% endfor %}
-            {% elif r.type == 'written' %}
-                {% if r.your == "Not Answered" %}
-                    <div class="not-answered">⚠ Not Answered</div>
-                {% endif %}
-                <div class="option neutral">Your Answer: {{ r.your }}</div>
-                <div class="option neutral">Correct Answer: {{ r.correct }}</div>
-                <div class="option {% if r.is_correct %}correct{% else %}wrong{% endif %}">
-                    {% if r.is_correct %}✔ Correct{% else %}❌ Incorrect{% endif %}
-                </div>
-            {% elif r.type == 'match' %}
-                <div class="option neutral">Match results:</div>
-                {% for pair in r.pair_results %}
-                    <div class="option {% if pair.is_correct %}correct{% else %}wrong{% endif %}">
-                        {{ pair.left }} → Your: {{ pair.selected }} / Correct: {{ pair.right }}
-                    </div>
-                {% endfor %}
-                <div class="option {% if r.correct_count == r.total_pairs %}correct{% else %}wrong{% endif %}">
-                    {{ r.correct_count }}/{{ r.total_pairs }} pairs correct
-                </div>
-            {% else %}
-                {% if r.your == "Not Answered" %}
-                    <div class="not-answered">⚠ Not Answered</div>
-                {% endif %}
-                <div class="option neutral">Your Answer: {{ r.your }}</div>
-                <div class="option neutral">Correct Answer: {{ r.correct }}</div>
-                <div class="option {% if r.is_correct %}correct{% else %}wrong{% endif %}">
-                    {% if r.is_correct %}✔ Correct{% else %}❌ Incorrect{% endif %}
-                </div>
-            {% endif %}
+                    {% endfor %}
 
-        </div>
-    {% endfor %}
+                {% elif r.type == 'written' %}
+                    <div style="margin-top: 10px;">
+                        <strong>Your Answer:</strong>
+                        {% if r.your == "Not Answered" %}
+                            <span class="not-answered">⚠ Not Answered</span>
+                        {% else %}
+                            <div class="option neutral">{{ r.your }}</div>
+                        {% endif %}
+                    </div>
+
+                {% elif r.type == 'match' %}
+                    <div style="margin-top: 10px;">
+                        <strong>Your Matches:</strong>
+                    </div>
+                    {% for pair_result in r.pair_results %}
+                        <div style="display: flex; gap: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px; margin: 8px 0; border-left: 3px solid #667eea;">
+                            <div style="flex: 0 0 35%; font-weight: 600;">{{ pair_result.left }}</div>
+                            <div style="color: #999;">→</div>
+                            <div style="flex: 1; color: #667eea; font-weight: 500;">
+                                {% if pair_result.selected %}
+                                    {{ pair_result.selected }}
+                                {% else %}
+                                    <span style="color: #999; font-style: italic;">Not Answered</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+            </div>
+        {% endfor %}
+    {% endif %}
 
 </div>
 

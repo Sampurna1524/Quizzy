@@ -23,6 +23,9 @@ def init_db():
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS teacher_message TEXT")
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_name TEXT")
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_type TEXT DEFAULT 'mcq'")
+        c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS has_answer_key BOOLEAN DEFAULT TRUE")
+        c.execute("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS responses TEXT DEFAULT '{}'")
+        c.execute("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS manual_score DOUBLE PRECISION DEFAULT NULL")
         conn.commit()
     except Exception as e:
         print(f"Database migration error: {e}")
@@ -36,6 +39,9 @@ def ensure_quiz_columns():
     try:
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_name TEXT")
         c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS quiz_type TEXT DEFAULT 'mcq'")
+        c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS has_answer_key BOOLEAN DEFAULT TRUE")
+        c.execute("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS responses TEXT DEFAULT '{}'")
+        c.execute("ALTER TABLE attempts ADD COLUMN IF NOT EXISTS manual_score DOUBLE PRECISION DEFAULT NULL")
         conn.commit()
     except Exception as e:
         print(f"Database migration error: {e}")
@@ -456,13 +462,13 @@ def dashboard():
     c = conn.cursor()
 
     try:
-        c.execute("SELECT id, quiz_name, quiz_type FROM quizzes WHERE owner=%s", (current_user.id,))
+        c.execute("SELECT id, quiz_name, quiz_type, has_answer_key FROM quizzes WHERE owner=%s", (current_user.id,))
     except psycopg2.errors.UndefinedColumn:
         conn.close()
         ensure_quiz_columns()
         conn = get_db()
         c = conn.cursor()
-        c.execute("SELECT id, quiz_name, quiz_type FROM quizzes WHERE owner=%s", (current_user.id,))
+        c.execute("SELECT id, quiz_name, quiz_type, has_answer_key FROM quizzes WHERE owner=%s", (current_user.id,))
 
     rows = c.fetchall()
     conn.close()
@@ -471,7 +477,8 @@ def dashboard():
         {
             "id": row[0],
             "name": row[1] if row[1] else 'Untitled Quiz',
-            "type": row[2] if row[2] else 'mcq'
+            "type": row[2] if row[2] else 'mcq',
+            "has_answer_key": row[3] if row[3] is not None else True
         }
         for row in rows
     ]
@@ -511,22 +518,28 @@ def create_quiz():
 
         questions = []
         answers = {}
+        has_answer_key = False  # Default to manual checking
 
         if q_file:
             text = extract_text_from_file(q_file, q_file.filename)
             if quiz_type == 'written':
                 questions, answers = parse_written_quiz(text)
+                has_answer_key = True if answers else False  # Has answer key if answers were extracted
             elif quiz_type == 'match':
                 questions, answers = parse_match_quiz(text)
+                has_answer_key = True if answers else False
             elif quiz_type == 'mix':
                 questions, answers = parse_mix_quiz(text)
+                has_answer_key = True if answers else False
             else:
                 questions, answers = parse_mcqs(text)
+                has_answer_key = True if answers else False  # MCQ may include inline answer key
 
         if a_file and quiz_type == 'mcq':
             ans_text = extract_text_from_file(a_file, a_file.filename)
             file_answers = parse_answers(ans_text)
             answers.update(file_answers)
+            has_answer_key = True
 
         quiz_id = str(uuid.uuid4())[:8]
 
@@ -534,8 +547,8 @@ def create_quiz():
         c = conn.cursor()
 
         c.execute("""
-        INSERT INTO quizzes (id, owner, questions, answers, teacher_message, quiz_name, quiz_type)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO quizzes (id, owner, questions, answers, teacher_message, quiz_name, quiz_type, has_answer_key)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             quiz_id,
             current_user.id,
@@ -543,7 +556,8 @@ def create_quiz():
             json.dumps(answers),
             teacher_message,
             quiz_name,
-            quiz_type
+            quiz_type,
+            has_answer_key
         ))
 
         conn.commit()
@@ -573,23 +587,29 @@ def edit_quiz(quiz_id):
         quiz_name = request.form.get('quiz_name', '').strip()
         teacher_message = request.form.get('teacher_message', '').strip()
         quiz_type = request.form.get('quiz_type', 'mcq')
+        has_answer_key = False
 
         if q_file:
             text = extract_text_from_file(q_file, q_file.filename)
             if quiz_type == 'written':
                 questions, answers = parse_written_quiz(text)
+                has_answer_key = True if answers else False
             elif quiz_type == 'match':
                 questions, answers = parse_match_quiz(text)
+                has_answer_key = True if answers else False
             elif quiz_type == 'mix':
                 questions, answers = parse_mix_quiz(text)
+                has_answer_key = True if answers else False
             else:
                 questions, answers = parse_mcqs(text)
-            c.execute("UPDATE quizzes SET questions=%s, answers=%s WHERE id=%s", (json.dumps(questions), json.dumps(answers), quiz_id))
+                has_answer_key = True if answers else False
+            c.execute("UPDATE quizzes SET questions=%s, answers=%s, has_answer_key=%s WHERE id=%s", (json.dumps(questions), json.dumps(answers), has_answer_key, quiz_id))
 
         if a_file and quiz_type == 'mcq':
             ans_text = extract_text_from_file(a_file, a_file.filename)
             answers = parse_answers(ans_text)
-            c.execute("UPDATE quizzes SET answers=%s WHERE id=%s", (json.dumps(answers), quiz_id))
+            has_answer_key = True
+            c.execute("UPDATE quizzes SET answers=%s, has_answer_key=%s WHERE id=%s", (json.dumps(answers), has_answer_key, quiz_id))
 
         c.execute("UPDATE quizzes SET quiz_name=%s, teacher_message=%s, quiz_type=%s WHERE id=%s", (quiz_name, teacher_message, quiz_type, quiz_id))
 
@@ -737,7 +757,7 @@ def submit(quiz_id):
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT questions, answers FROM quizzes WHERE id=%s", (quiz_id,))
+    c.execute("SELECT questions, answers, has_answer_key FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     conn.close()
 
@@ -746,18 +766,85 @@ def submit(quiz_id):
 
     questions = json.loads(row[0])
     answers = json.loads(row[1])
+    has_answer_key = row[2]
 
     name = request.form.get("name")
-    score, total, results = evaluate_submission(questions, answers, request.form)
+    
+    # Collect all responses
+    responses = {}
+    for i, q in enumerate(questions, start=1):
+        q_type = q.get('type', 'mcq')
+        if q_type == 'match':
+            responses[str(i)] = {str(j): request.form.get(f"q{i}_{j}") for j in range(1, len(q.get('pairs', [])) + 1)}
+        else:
+            responses[str(i)] = request.form.get(f"q{i}", "").strip()
+
+    score = 0
+    total = 0
+    results = []
+
+    if has_answer_key:
+        # Auto-grade if answer key exists
+        score, total, results = evaluate_submission(questions, answers, request.form)
+    else:
+        # Manual checking - don't auto-grade, just collect responses
+        for i, q in enumerate(questions, start=1):
+            q_type = q.get('type', 'mcq')
+            
+            if q_type == 'mcq':
+                user_ans = request.form.get(f"q{i}", "")
+                results.append({
+                    "type": "mcq",
+                    "question": q.get('question'),
+                    "options": q.get('options', {}),
+                    "your": user_ans if user_ans else "Not Answered",
+                })
+            elif q_type == 'written':
+                user_ans = request.form.get(f"q{i}", "").strip()
+                results.append({
+                    "type": "written",
+                    "question": q.get('question'),
+                    "your": user_ans if user_ans else "Not Answered",
+                })
+            elif q_type == 'match':
+                pairs = q.get('pairs', [])
+                pair_results = []
+                for idx, pair in enumerate(pairs, start=1):
+                    user_value = request.form.get(f"q{i}_{idx}")
+                    selected_text = "Not Answered"
+                    if user_value and user_value.isdigit():
+                        numeric_index = int(user_value) - 1
+                        if 0 <= numeric_index < len(pairs):
+                            selected_text = pairs[numeric_index].get('right', selected_text)
+                    pair_results.append({
+                        "left": pair.get('left'),
+                        "selected": selected_text,
+                    })
+                results.append({
+                    "type": "match",
+                    "question": q.get('question'),
+                    "pairs": pairs,
+                    "pair_results": pair_results,
+                })
+            else:
+                user_ans = request.form.get(f"q{i}", "").strip()
+                results.append({
+                    "type": "written",
+                    "question": q.get('question'),
+                    "your": user_ans if user_ans else "Not Answered",
+                })
+            total += 1
 
     # ---------------- SAVE ATTEMPT (ONLY ONCE) ----------------
     conn = get_db()
     c = conn.cursor()
 
+    manual_score = score if has_answer_key else None
+    
     c.execute("""
-    INSERT INTO attempts (quiz_id, name, score, total)
-    VALUES (%s, %s, %s, %s)
-    """, (quiz_id, name, score, total))
+    INSERT INTO attempts (quiz_id, name, score, total, responses, manual_score)
+    VALUES (%s, %s, %s, %s, %s, %s)
+    """, (quiz_id, name, score if has_answer_key else 0, total, json.dumps(responses), manual_score))
 
     conn.commit()
     conn.close()
@@ -769,7 +856,8 @@ def submit(quiz_id):
         total=total,
         results=results,
         name=name,
-        quiz_id=quiz_id
+        quiz_id=quiz_id,
+        has_answer_key=has_answer_key
     )
 
 
@@ -790,6 +878,135 @@ def view_results(quiz_id):
     conn.close()
 
     return render_template("view_results.html", results=results, quiz_id=quiz_id)
+
+
+# -------- MANUAL CHECKING --------
+@app.route('/manual_check/<quiz_id>')
+@login_required
+def manual_check(quiz_id):
+    """View all responses for manual grading"""
+    conn = get_db()
+    c = conn.cursor()
+
+    # Check if user owns this quiz
+    c.execute("SELECT owner, questions, quiz_name, quiz_type FROM quizzes WHERE id=%s", (quiz_id,))
+    quiz_row = c.fetchone()
+    
+    if not quiz_row or str(quiz_row[0]) != current_user.id:
+        conn.close()
+        return "Unauthorized"
+
+    questions = json.loads(quiz_row[1])
+    quiz_name = quiz_row[2] or "Quiz"
+    quiz_type = quiz_row[3] or "mcq"
+
+    # Fetch all attempts with responses
+    c.execute("""
+    SELECT id, name, manual_score, responses, timestamp
+    FROM attempts
+    WHERE quiz_id=%s
+    ORDER BY timestamp DESC
+    """, (quiz_id,))
+
+    attempts = c.fetchall()
+    conn.close()
+
+    attempts_data = []
+    for attempt in attempts:
+        attempt_id, name, manual_score, responses_json, timestamp = attempt
+        try:
+            responses = json.loads(responses_json) if responses_json else {}
+        except:
+            responses = {}
+
+        # Build attempt details
+        attempt_details = {
+            "id": attempt_id,
+            "name": name,
+            "manual_score": manual_score,
+            "timestamp": timestamp,
+            "questions": []
+        }
+
+        for i, q in enumerate(questions, start=1):
+            q_type = q.get('type', 'mcq')
+            user_response = responses.get(str(i), "")
+            
+            q_data = {
+                "number": i,
+                "type": q_type,
+                "question": q.get('question'),
+                "response": user_response,
+            }
+
+            if q_type == 'mcq':
+                q_data["options"] = q.get('options', {})
+            elif q_type == 'match':
+                q_data["pairs"] = q.get('pairs', [])
+                if isinstance(user_response, dict):
+                    q_data["response"] = user_response
+
+            attempt_details["questions"].append(q_data)
+
+        attempts_data.append(attempt_details)
+
+    return render_template("manual_check.html", 
+                         quiz_id=quiz_id, 
+                         quiz_name=quiz_name,
+                         quiz_type=quiz_type,
+                         attempts=attempts_data,
+                         total_questions=len(questions))
+
+
+@app.route('/grade_attempt/<attempt_id>', methods=['POST'])
+@login_required
+def grade_attempt(attempt_id):
+    """Save manual grades for an attempt"""
+    conn = get_db()
+    c = conn.cursor()
+
+    # Get the attempt
+    c.execute("SELECT quiz_id FROM attempts WHERE id=%s", (attempt_id,))
+    attempt_row = c.fetchone()
+    
+    if not attempt_row:
+        conn.close()
+        return "Attempt not found", 404
+
+    quiz_id = attempt_row[0]
+
+    # Verify user owns the quiz
+    c.execute("SELECT owner FROM quizzes WHERE id=%s", (quiz_id,))
+    quiz_row = c.fetchone()
+    
+    if not quiz_row or str(quiz_row[0]) != current_user.id:
+        conn.close()
+        return "Unauthorized", 403
+
+    # Get the grades from the request
+    data = request.get_json()
+    scores = data.get("scores", {})  # {question_id: score}
+    
+    # Calculate total score, supporting decimal values such as 0.5
+    total_score = 0.0
+    for score in scores.values():
+        try:
+            total_score += float(score)
+        except (TypeError, ValueError):
+            continue
+
+    # Update the attempt with manual score
+    c.execute("""
+    UPDATE attempts 
+    SET manual_score = %s
+    WHERE id = %s
+    """, (total_score, attempt_id))
+
+    conn.commit()
+    conn.close()
+
+    return {"success": True, "score": total_score}
+
 
 
 @app.route('/download_report/<quiz_id>')

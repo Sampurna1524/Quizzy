@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manual Check - {{ quiz_name }}</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            background: #f4f6fb;
+        }
+
+        /* HEADER */
+        .header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+        }
+
+        .back-btn {
+            background: white;
+            color: #764ba2;
+            padding: 8px 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .back-btn:hover {
+            background: #eee;
+        }
+
+        /* MAIN CONTAINER */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .quiz-title {
+            margin-bottom: 30px;
+        }
+
+        .quiz-title h3 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .quiz-title p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* ATTEMPTS LIST */
+        .attempts-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .attempt-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-left: 5px solid #667eea;
+        }
+
+        .attempt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .student-info h4 {
+            margin: 0 0 5px 0;
+            color: #333;
+        }
+
+        .student-info p {
+            margin: 0;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .attempt-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .score-badge {
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .score-badge.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .score-badge.graded {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .grade-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .grade-btn:hover {
+            background: #5568d3;
+        }
+
+        .grade-btn.disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* QUESTIONS */
+        .questions-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .question-item {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 3px solid #e0e0e0;
+        }
+
+        .question-item.answered {
+            border-left-color: #667eea;
+        }
+
+        .question-item.not-answered {
+            border-left-color: #ff9800;
+        }
+
+        .q-number {
+            font-size: 12px;
+            color: #999;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .q-text {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .q-type-badge {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .response-box {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .response-box.not-answered {
+            color: #999;
+            font-style: italic;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .option {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            font-size: 13px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .option.selected {
+            background: #e3f2fd;
+            border-color: #667eea;
+            font-weight: 600;
+        }
+
+        .option.correct {
+            background: #c8e6c9;
+            border-color: #4caf50;
+        }
+
+        .question-grade {
+            background: #f0f7ff;
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #d9e8ff;
+            margin-top: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .question-grade label {
+            font-size: 14px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .grade-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .grade-option {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #d0d7e6;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .grade-option input {
+            cursor: pointer;
+        }
+
+        .grade-option.selected {
+            border-color: #667eea;
+            background: #e8f0ff;
+        }
+
+        .submit-grade {
+            width: 100%;
+            margin-top: 15px;
+            background: #4caf50;
+            color: white;
+            padding: 12px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .submit-grade:hover {
+            background: #45a049;
+        }
+
+        /* MATCH TYPE */
+        .match-pair {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border-radius: 6px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+        }
+
+        .match-left {
+            flex: 0 0 30%;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .match-arrow {
+            color: #999;
+        }
+
+        .match-right {
+            flex: 1;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        /* EMPTY STATE */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty h3 {
+            margin: 0 0 10px 0;
+        }
+
+        /* MOBILE RESPONSIVE */
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .attempt-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .grade-control {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .match-pair {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .match-left, .match-right {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>📋 Manual Check - {{ quiz_name }}</h2>
+    <a href="/dashboard" class="back-btn">← Back to Dashboard</a>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <div class="quiz-title">
+        <h3>Review Student Responses</h3>
+        <p>{{ attempts|length }} student(s) submitted this quiz</p>
+    </div>
+
+    {% if attempts %}
+        <div class="attempts-container">
+            {% for attempt in attempts %}
+                <div class="attempt-card">
+
+                    <!-- ATTEMPT HEADER -->
+                    <div class="attempt-header">
+                        <div class="student-info">
+                            <h4>{{ attempt.name }}</h4>
+                            <p>Submitted: {{ attempt.timestamp }}</p>
+                        </div>
+                        <div class="attempt-status">
+                            {% if attempt.manual_score is not none %}
+                                <div class="score-badge graded">
+                                    Score: {{ attempt.manual_score }}/{{ total_questions }}
+                                </div>
+                            {% else %}
+                                <div class="score-badge pending">
+                                    Pending Review
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- QUESTIONS -->
+                    <div class="questions-list">
+                        {% for q in attempt.questions %}
+                            <div class="question-item {% if q.response %}answered{% else %}not-answered{% endif %}">
+                                <div class="q-number">Question {{ q.number }}</div>
+                                <span class="q-type-badge">{{ q.type }}</span>
+                                <div class="q-text">{{ q.question }}</div>
+
+                                <!-- MCQ TYPE -->
+                                {% if q.type == 'mcq' %}
+                                    <div class="response-box">
+                                        <strong>Student Answer:</strong>
+                                        {% if q.response %}
+                                            <strong style="color: #667eea;">{{ q.response }}</strong>
+                                            {% if q.options.get(q.response) %}
+                                                <div style="font-size: 12px; color: #666; margin-top: 5px;">{{ q.options[q.response] }}</div>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="not-answered">Not Answered</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="options-list">
+                                        {% for key, value in q.options.items() %}
+                                            <div class="option {% if key == q.response %}selected{% endif %}">
+                                                <strong>{{ key }})</strong> {{ value }}
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                <!-- WRITTEN TYPE -->
+                                {% elif q.type == 'written' %}
+                                    <div class="response-box {% if not q.response %}not-answered{% endif %}">
+                                        <strong>Student Answer:</strong><br>
+                                        {{ q.response }}
+                                    </div>
+
+                                <!-- MATCH TYPE -->
+                                {% elif q.type == 'match' %}
+                                    <div class="response-box">
+                                        <strong>Student Matches:</strong>
+                                    </div>
+                                    {% for pair_result in q.pair_results %}
+                                        <div class="match-pair">
+                                            <div class="match-left">{{ pair_result.left }}</div>
+                                            <div class="match-arrow">→</div>
+                                            <div class="match-right">
+                                                {% if pair_result.selected %}
+                                                    {{ pair_result.selected }}
+                                                {% else %}
+                                                    <span style="color: #999; font-style: italic;">Not Answered</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+
+                                <div class="question-grade">
+                                    <label>Grade this question</label>
+                                    <div class="grade-options">
+                                        <label class="grade-option">
+                                            <input type="radio" name="q{{ attempt.id }}_{{ q.number }}" value="1"> ✓ Correct
+                                        </label>
+                                        <label class="grade-option">
+                                            <input type="radio" name="q{{ attempt.id }}_{{ q.number }}" value="0"> ✗ Wrong
+                                        </label>
+                                        <label class="grade-option">
+                                            <input type="radio" name="q{{ attempt.id }}_{{ q.number }}" value="0.5"> ½ Partial
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <button class="submit-grade" onclick="submitGrades('{{ attempt.id }}', '{{ total_questions }}')">
+                        {% if attempt.manual_score is not none %}Update Grade{% else %}Submit Grade{% endif %}
+                    </button>
+
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty">
+            <h3>No Submissions Yet</h3>
+            <p>Students haven't submitted any responses yet. Share the quiz link to get started!</p>
+        </div>
+    {% endif %}
+
+</div>
+
+<script>
+function submitGrades(attemptId, totalQuestions) {
+    const scores = {};
+    let totalScore = 0;
+
+    for (let i = 1; i <= totalQuestions; i++) {
+        const name = `q${attemptId}_${i}`;
+        const selected = document.querySelector(`input[name="${name}"]:checked`);
+        if (selected) {
+            const score = parseFloat(selected.value);
+            scores[i] = score;
+            totalScore += score;
+        }
+    }
+
+    if (Object.keys(scores).length !== totalQuestions) {
+        alert('Please grade every question before submitting.');
+        return;
+    }
+
+    fetch(`/grade_attempt/${attemptId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            scores: scores
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Grades submitted! Score: ${data.score}/${totalQuestions}`);
+            location.reload();
+        } else {
+            alert('Error submitting grades');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error submitting grades');
+    });
+}
+</script>
+
+</body>
+</html>
