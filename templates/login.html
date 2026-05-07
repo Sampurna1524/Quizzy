@@ -11,8 +11,7 @@
             min-height: 100vh;
             display: flex;
             background: linear-gradient(135deg, #667eea, #764ba2);
-            overflow-x: hidden;
-            overflow-y: auto;
+            overflow: hidden;
         }
 
         /* LEFT SIDE */
@@ -111,13 +110,15 @@
         }
 
         input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            transition: 0.3s;
-        }
+    width: 100%;
+    padding: 8px 12px;   /* reduced from 12px / 14px */
+    height: 38px;        /* smaller textbox height */
+    margin-top: 6px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    transition: 0.3s;
+    box-sizing: border-box;
+}
 
         input:focus {
             border-color: #667eea;
