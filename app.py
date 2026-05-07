@@ -12,6 +12,23 @@ from docx import Document
 def get_db():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
+# Database migration
+def init_db():
+    if not os.environ.get("DATABASE_URL"):
+        return  # Skip if no database URL
+    conn = get_db()
+    c = conn.cursor()
+    try:
+        c.execute("ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS teacher_message TEXT")
+        conn.commit()
+    except Exception as e:
+        print(f"Database migration error: {e}")
+    finally:
+        conn.close()
+
+# Run migration on startup
+init_db()
+
 
 from flask import Response
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
@@ -236,6 +253,7 @@ def create_quiz():
     if request.method == 'POST':
         q_file = request.files.get('questions_file')
         a_file = request.files.get('answers_file')
+        teacher_message = request.form.get('teacher_message', '').strip()
 
         questions = []
         answers = {}
@@ -254,13 +272,14 @@ def create_quiz():
         c = conn.cursor()
 
         c.execute("""
-        INSERT INTO quizzes (id, owner, questions, answers)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO quizzes (id, owner, questions, answers, teacher_message)
+        VALUES (%s, %s, %s, %s, %s)
         """, (
             quiz_id,
             current_user.id,
             json.dumps(questions),
-            json.dumps(answers)
+            json.dumps(answers),
+            teacher_message
         ))
 
         conn.commit()
@@ -287,6 +306,7 @@ def edit_quiz(quiz_id):
     if request.method == 'POST':
         q_file = request.files.get('questions_file')
         a_file = request.files.get('answers_file')
+        teacher_message = request.form.get('teacher_message', '').strip()
 
         if q_file:
             text = extract_text_from_file(q_file, q_file.filename)
@@ -298,13 +318,20 @@ def edit_quiz(quiz_id):
             answers = parse_answers(ans_text)
             c.execute("UPDATE quizzes SET answers=%s WHERE id=%s", (json.dumps(answers), quiz_id))
 
+        c.execute("UPDATE quizzes SET teacher_message=%s WHERE id=%s", (teacher_message, quiz_id))
+
         conn.commit()
         conn.close()
 
         return redirect('/dashboard')
 
+    # Get current teacher_message for the form
+    c.execute("SELECT teacher_message FROM quizzes WHERE id=%s", (quiz_id,))
+    row = c.fetchone()
+    teacher_message = row[0] if row else ''
+
     conn.close()
-    return render_template("edit_quiz.html", quiz_id=quiz_id)
+    return render_template("edit_quiz.html", quiz_id=quiz_id, teacher_message=teacher_message)
 
 # ---------------- TAKE QUIZ ----------------
 @app.route('/quiz/<quiz_id>')
@@ -312,7 +339,7 @@ def take_quiz(quiz_id):
     conn = get_db()
     c = conn.cursor()
 
-    c.execute("SELECT questions FROM quizzes WHERE id=%s", (quiz_id,))
+    c.execute("SELECT questions, teacher_message FROM quizzes WHERE id=%s", (quiz_id,))
     row = c.fetchone()
     conn.close()
 
@@ -320,8 +347,9 @@ def take_quiz(quiz_id):
         return "Quiz not found"
 
     questions = json.loads(row[0])
+    teacher_message = row[1] or ''
 
-    return render_template("quiz.html", questions=questions, quiz_id=quiz_id)
+    return render_template("quiz.html", questions=questions, quiz_id=quiz_id, teacher_message=teacher_message)
 
 # ---------------- SUBMIT ----------------
 @app.route('/submit/<quiz_id>', methods=['POST'])

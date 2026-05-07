@@ -48,7 +48,37 @@
             border: 1px solid #ccc;
             box-sizing: border-box; /* fallback safety */
         }
+        /* TEACHER MESSAGE */
+        .teacher-message {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border: 2px solid #667eea;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            box-shadow: 0 5px 15px rgba(102,126,234,0.15);
+        }
 
+        .message-icon {
+            font-size: 40px;
+            flex-shrink: 0;
+        }
+
+        .message-content h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .message-content p {
+            margin: 0;
+            color: #555;
+            line-height: 1.6;
+            font-size: 16px;
+        }
         /* QUESTION CARD */
         .card {
             background: white;
@@ -210,7 +240,25 @@
         width: 100%;
         font-size: 16px;
     }
+    /* TEACHER MESSAGE */
+    .teacher-message {
+        padding: 18px;
+        flex-direction: column;
+        text-align: center;
+        gap: 10px;
+    }
 
+    .message-icon {
+        font-size: 35px;
+    }
+
+    .message-content h3 {
+        font-size: 16px;
+    }
+
+    .message-content p {
+        font-size: 15px;
+    }
     /* QUESTION CARDS */
     .card {
         padding: 18px;
@@ -283,6 +331,17 @@
         <label><b>Your Name</b></label><br><br>
         <input type="text" name="name" required>
     </div>
+
+    {% if teacher_message %}
+    <!-- TEACHER MESSAGE -->
+    <div class="teacher-message">
+        <div class="message-icon">👨‍🏫</div>
+        <div class="message-content">
+            <h3>Message from Teacher</h3>
+            <p>{{ teacher_message }}</p>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- QUESTIONS -->
     {% for q in questions %}

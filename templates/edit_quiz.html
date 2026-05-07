@@ -146,6 +146,23 @@
             background: transparent;
         }
 
+        textarea {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            background: transparent;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #ff7e5f;
+            box-shadow: 0 0 0 2px rgba(255,126,95,0.2);
+        }
+
         .hint {
             font-size: 12px;
             color: #888;
@@ -326,6 +343,12 @@
             <label>✅ Replace Answers</label>
             <input type="file" name="answers_file" accept=".txt,.pdf,.doc,.docx">
             <div class="hint">Upload answer key file (.txt, .pdf, .doc, .docx)</div>
+        </div>
+
+        <div class="file-box">
+            <label>📝 Update Teacher Message</label>
+            <textarea name="teacher_message" rows="4" placeholder="Enter a message for your students...">{{ teacher_message if teacher_message else '' }}</textarea>
+            <div class="hint">This message will be displayed to students taking the quiz</div>
         </div>
 
         <button type="submit">💾 Save Changes</button>

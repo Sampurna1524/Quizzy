@@ -131,6 +131,23 @@
             background: transparent;
         }
 
+        textarea {
+            width: 100%;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            background: transparent;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102,126,234,0.2);
+        }
+
         .hint {
             font-size: 12px;
             color: #888;
@@ -282,6 +299,12 @@
             <label>✅ Answer Key (Optional)</label>
             <input type="file" name="answers_file" accept=".txt,.pdf,.docx,.doc">
             <div class="hint">Supports .txt, .pdf, or .docx formats</div>
+        </div>
+
+        <div class="file-box">
+            <label>📝 Message from Teacher (Optional)</label>
+            <textarea name="teacher_message" rows="4" placeholder="Enter a message for your students..."></textarea>
+            <div class="hint">This message will be displayed to students taking the quiz</div>
         </div>
 
         <button type="submit">🚀 Generate Quiz</button>
