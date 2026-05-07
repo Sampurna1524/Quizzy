@@ -140,6 +140,13 @@
             color: #1565c0;
         }
 
+        .delete {
+            background: #ffebee;
+            color: #c62828;
+            border: none;
+            cursor: pointer;
+        }
+
         .icon-actions {
     display: flex;
     align-items: center;
@@ -243,6 +250,13 @@
         box-sizing: border-box;
     }
 
+    .actions .delete {
+        flex: 1 1 calc(50% - 10px);
+        text-align: center;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
     .quiz-id {
         word-break: break-word;
         line-height: 1.5;
@@ -312,6 +326,9 @@
                         <a href="/edit_quiz/{{ quiz_id }}" class="edit">Edit</a>
                         <a href="/results/{{ quiz_id }}" class="results">Results</a>
                         <a href="#" class="copy" onclick="copyLink('{{ quiz_id }}', this)">Copy Link</a>
+                        <form method="POST" action="/delete_quiz/{{ quiz_id }}" style="display: inline;">
+                            <button type="submit" class="delete" onclick="return confirm('Are you sure you want to delete this quiz?')">Delete</button>
+                        </form>
                     </div>
 
                 </div>

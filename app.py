@@ -209,6 +209,26 @@ def dashboard():
 
     return render_template("dashboard.html", quizzes=quizzes)
 
+# ---------------- DELETE QUIZ ----------------
+@app.route('/delete_quiz/<quiz_id>', methods=['POST'])
+@login_required
+def delete_quiz(quiz_id):
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("SELECT owner FROM quizzes WHERE id=%s", (quiz_id,))
+    row = c.fetchone()
+
+    if not row or str(row[0]) != current_user.id:
+        conn.close()
+        return "Unauthorized"
+
+    c.execute("DELETE FROM quizzes WHERE id=%s", (quiz_id,))
+    conn.commit()
+    conn.close()
+
+    return redirect('/dashboard')
+
 # ---------------- CREATE QUIZ ----------------
 @app.route('/create_quiz', methods=['GET', 'POST'])
 @login_required
