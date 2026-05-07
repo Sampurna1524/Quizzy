@@ -6,6 +6,9 @@ import json
 import psycopg2
 import os
 
+from PyPDF2 import PdfReader
+from docx import Document
+
 def get_db():
     return psycopg2.connect(os.environ.get("DATABASE_URL"))
 
@@ -74,6 +77,45 @@ def parse_answers(text):
         if match:
             answers[str(match.group(1))] = match.group(2)
     return answers
+
+# -------- PDF EXTRACTION --------
+def extract_text_from_pdf(file_obj):
+    try:
+        pdf_reader = PdfReader(file_obj)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() + "\n"
+        return text
+    except Exception as e:
+        print(f"PDF extraction error: {e}")
+        return ""
+
+# -------- WORD EXTRACTION --------
+def extract_text_from_word(file_obj):
+    try:
+        doc = Document(file_obj)
+        text = ""
+        for paragraph in doc.paragraphs:
+            text += paragraph.text + "\n"
+        return text
+    except Exception as e:
+        print(f"Word extraction error: {e}")
+        return ""
+
+# -------- FILE TEXT EXTRACTION --------
+def extract_text_from_file(file_obj, filename):
+    """Extract text from .txt, .pdf, or .docx files"""
+    if filename.lower().endswith('.pdf'):
+        return extract_text_from_pdf(file_obj)
+    elif filename.lower().endswith(('.docx', '.doc')):
+        return extract_text_from_word(file_obj)
+    else:  # Default to .txt
+        try:
+            file_obj.seek(0)
+            return file_obj.read().decode('utf-8')
+        except Exception as e:
+            print(f"Text extraction error: {e}")
+            return ""
 
 # ---------------- AUTH ----------------
 @app.route('/')
@@ -179,11 +221,11 @@ def create_quiz():
         answers = {}
 
         if q_file:
-            text = q_file.read().decode('utf-8')
+            text = extract_text_from_file(q_file, q_file.filename)
             questions = parse_mcqs(text)
 
         if a_file:
-            ans_text = a_file.read().decode('utf-8')
+            ans_text = extract_text_from_file(a_file, a_file.filename)
             answers = parse_answers(ans_text)
 
         quiz_id = str(uuid.uuid4())[:8]
@@ -227,12 +269,12 @@ def edit_quiz(quiz_id):
         a_file = request.files.get('answers_file')
 
         if q_file:
-            text = q_file.read().decode('utf-8')
+            text = extract_text_from_file(q_file, q_file.filename)
             questions = parse_mcqs(text)
             c.execute("UPDATE quizzes SET questions=%s WHERE id=%s", (json.dumps(questions), quiz_id))
 
         if a_file:
-            ans_text = a_file.read().decode('utf-8')
+            ans_text = extract_text_from_file(a_file, a_file.filename)
             answers = parse_answers(ans_text)
             c.execute("UPDATE quizzes SET answers=%s WHERE id=%s", (json.dumps(answers), quiz_id))
 

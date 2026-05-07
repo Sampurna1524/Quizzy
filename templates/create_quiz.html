@@ -274,14 +274,14 @@
 
         <div class="file-box">
             <label>📄 Questions File</label>
-            <input type="file" name="questions_file" required>
-            <div class="hint">Supports .txt format (MCQs)</div>
+            <input type="file" name="questions_file" accept=".txt,.pdf,.docx,.doc" required>
+            <div class="hint">Supports .txt, .pdf, or .docx formats (MCQs)</div>
         </div>
 
         <div class="file-box">
             <label>✅ Answer Key (Optional)</label>
-            <input type="file" name="answers_file">
-            <div class="hint">Enable auto evaluation</div>
+            <input type="file" name="answers_file" accept=".txt,.pdf,.docx,.doc">
+            <div class="hint">Supports .txt, .pdf, or .docx formats</div>
         </div>
 
         <button type="submit">🚀 Generate Quiz</button>
