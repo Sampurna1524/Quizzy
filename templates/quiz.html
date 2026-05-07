@@ -319,7 +319,11 @@
 </div>
 
 <div class="header">
-    🧠 Test yourself
+    {% if quiz_name %}
+        🧠 {{ quiz_name }}
+    {% else %}
+        🧠 Test yourself
+    {% endif %}
 </div>
 
 <div class="container">

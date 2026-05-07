@@ -345,8 +345,12 @@
             <div class="hint">Upload answer key file (.txt, .pdf, .doc, .docx)</div>
         </div>
 
-        <div class="file-box">
-            <label>📝 Update Teacher Message</label>
+        <div class="file-box">            <label>🏷️ Quiz Name</label>
+            <input type="text" name="quiz_name" placeholder="Enter a quiz title" value="{{ quiz_name if quiz_name else '' }}" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;">
+            <div class="hint">Use a descriptive title so students and teachers can easily identify this quiz.</div>
+        </div>
+
+        <div class="file-box">            <label>📝 Update Teacher Message</label>
             <textarea name="teacher_message" rows="4" placeholder="Enter a message for your students...">{{ teacher_message if teacher_message else '' }}</textarea>
             <div class="hint">This message will be displayed to students taking the quiz</div>
         </div>

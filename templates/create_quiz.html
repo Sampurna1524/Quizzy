@@ -290,6 +290,12 @@
     <form method="POST" enctype="multipart/form-data">
 
         <div class="file-box">
+            <label>🏷️ Quiz Name</label>
+            <input type="text" name="quiz_name" placeholder="Enter a quiz title" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ccc;" required>
+            <div class="hint">Give your quiz a descriptive title so it is easier to find.</div>
+        </div>
+
+        <div class="file-box">
             <label>📄 Questions File</label>
             <input type="file" name="questions_file" accept=".txt,.pdf,.docx,.doc" required>
             <div class="hint">Supports .txt, .pdf, or .docx formats (MCQs)</div>
