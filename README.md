@@ -176,4 +176,4 @@ Quizzy was built to make quiz creation and evaluation simple, modern, and access
 
 Your Name Here
 
-GitHub: https://github.com/YOUR_USERNAME
+GitHub: https://github.com/Sampurna1524
